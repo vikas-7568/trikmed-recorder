@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TrikMed — Voice Data Collection</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#C0392B">
+  <meta name="mobile-web-app-capable" content="yes">
+
+  <!-- iOS / Safari PWA -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TrikMed">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+  <style>
+    /* ── CRITICAL: no page movement ─────────────────────────────── */
+    html, body {
+      overflow: hidden;
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0F1F3D;
+      color: white;
+    }
+    .screen {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 24px 20px 40px;
+      display: none;
+    }
+    .screen.active { display: block; }
+    * { box-sizing: border-box; max-width: 100%; }
+
+    /* ── Logo ────────────────────────────────────────────────────── */
+    .logo-row {
+      display: flex; align-items: center;
+      gap: 12px; margin-bottom: 28px;
+    }
+    .logo-icon {
+      width: 46px; height: 46px; flex-shrink: 0;
+      background: #C0392B; border-radius: 10px;
+      font-size: 26px; font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-name { font-size: 17px; font-weight: 800; letter-spacing: -0.3px; }
+    .logo-sub  { font-size: 12px; color: #4a6080; margin-top: 2px; }
+
+    /* ── Register heading ───────────────────────────────────────── */
+    #screen-register h2 {
+      font-size: 22px; font-weight: 700;
+      margin: 0 0 22px; color: white;
+    }
+
+    /* ── Form fields ─────────────────────────────────────────────── */
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .field-label {
+      font-size: 11px; font-weight: 700;
+      color: #4a6080; text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    input[type=text], input[type=tel], select {
+      width: 100%; padding: 14px;
+      background: #152843;
+      border: 1.5px solid #1e3a5f;
+      border-radius: 12px;
+      color: white; font-size: 16px;
+      outline: none;
+      -webkit-appearance: none; appearance: none;
+    }
+    input::placeholder { color: #4a6080; }
+    input:focus, select:focus { border-color: #C0392B; }
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%234a6080' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center; padding-right: 38px;
+    }
+    select option { background: #152843; }
+
+    /* ── Toggle ──────────────────────────────────────────────────── */
+    .toggle-row {
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 14px;
+      padding: 14px;
+      background: #152843; border: 1.5px solid #1e3a5f; border-radius: 12px;
+      margin-bottom: 22px;
+    }
+    .t-title { font-size: 14px; font-weight: 600; color: white; }
+    .t-sub   { font-size: 11px; color: #4a6080; margin-top: 3px; }
+    .sw { position: relative; width: 48px; height: 26px; flex-shrink: 0; cursor: pointer; }
+    .sw input { opacity: 0; position: absolute; width: 0; height: 0; }
+    .sw-track {
+      position: absolute; inset: 0;
+      background: #1e3a5f; border-radius: 26px; transition: background 0.2s;
+    }
+    .sw-thumb {
+      position: absolute; width: 20px; height: 20px;
+      top: 3px; left: 3px;
+      background: white; border-radius: 50%;
+      transition: transform 0.2s; pointer-events: none;
+    }
+    .sw input:checked ~ .sw-track { background: #C0392B; }
+    .sw input:checked ~ .sw-thumb { transform: translateX(22px); }
+
+    /* ── Buttons ─────────────────────────────────────────────────── */
+    .btn-primary {
+      width: 100%; padding: 16px;
+      background: #C0392B; color: white;
+      border: none; border-radius: 12px;
+      font-size: 16px; font-weight: bold;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .btn-primary:active  { opacity: 0.84; }
+    .btn-primary:disabled { opacity: 0.48; pointer-events: none; }
+
+    /* ── Record screen: top bar ──────────────────────────────────── */
+    .top-bar {
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 10px;
+      margin-bottom: 14px;
+    }
+    .top-name { font-size: 16px; font-weight: 700; color: white; flex: 1; min-width: 0;
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .clip-badge {
+      background: #C0392B; color: white;
+      font-size: 12px; font-weight: 700;
+      padding: 4px 12px; border-radius: 99px; flex-shrink: 0;
+    }
+
+    /* ── Stats chips ─────────────────────────────────────────────── */
+    .stats-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .stat-chip {
+      padding: 5px 12px;
+      background: #152843; border: 1px solid #1e3a5f;
+      border-radius: 99px; font-size: 12px; font-weight: 600;
+    }
+    .stat-chip.green { color: #22c55e; border-color: rgba(34,197,94,0.35); }
+
+    /* ── Template card ───────────────────────────────────────────── */
+    .tmpl-card {
+      background: #152843;
+      border-left: 3px solid #C0392B;
+      border-radius: 12px; padding: 16px;
+      margin-bottom: 16px;
+    }
+    .tmpl-header {
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 8px;
+      margin-bottom: 10px;
+    }
+    .tmpl-label-text {
+      font-size: 11px; font-weight: 600; color: #4a6080;
+      text-transform: uppercase; letter-spacing: 0.07em;
+    }
+    .btn-next {
+      background: transparent; border: none;
+      color: #4a6080; font-size: 13px; font-weight: 600;
+      cursor: pointer; padding: 2px 4px; flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-next:active { color: #94a3b8; }
+    .tmpl-text { font-size: 15px; line-height: 1.7; color: white; }
+
+    /* ── Waveform ────────────────────────────────────────────────── */
+    .waveform {
+      display: flex; align-items: center; justify-content: center;
+      gap: 3px; height: 48px; margin-bottom: 4px;
+    }
+    .wave-bar {
+      width: 3px; height: 8px;
+      background: #1e3a5f; border-radius: 2px;
+    }
+
+    /* ── Timer ───────────────────────────────────────────────────── */
+    .timer {
+      font-size: 48px; font-family: 'Courier New', monospace;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -2px; text-align: center;
+      color: white; line-height: 1; margin-bottom: 18px;
+    }
+
+    /* ── Record button ───────────────────────────────────────────── */
+    .rec-zone {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 10px; margin-bottom: 14px;
+    }
+    .rec-wrap { position: relative; width: 80px; height: 80px; }
+    .pulse-ring {
+      position: absolute; inset: -9px; border-radius: 50%;
+      border: 3px solid #C0392B; opacity: 0; pointer-events: none;
+    }
+    .pulse-ring.on { animation: pulse-ring 1.15s ease-out infinite; }
+    @keyframes pulse-ring {
+      0%   { transform: scale(1);    opacity: 0.75; }
+      100% { transform: scale(1.65); opacity: 0; }
+    }
+    .rec-btn {
+      position: relative; z-index: 1;
+      width: 80px; height: 80px; border-radius: 50%;
+      background: #C0392B; border: none;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .rec-btn:disabled { opacity: 0.5; pointer-events: none; }
+    .rec-btn-label { font-size: 12px; font-weight: 600; color: #4a6080; }
+
+    /* ── Status ──────────────────────────────────────────────────── */
+    .status-line {
+      text-align: center; font-size: 14px; font-weight: 600;
+      margin-bottom: 8px; min-height: 20px;
+    }
+
+    /* ── Recording ID ────────────────────────────────────────────── */
+    .rec-id {
+      text-align: center; font-family: 'Courier New', monospace;
+      font-size: 11px; color: #2a3f5f;
+      letter-spacing: 0.04em; margin-bottom: 14px; min-height: 16px;
+    }
+
+    /* ── Change user ─────────────────────────────────────────────── */
+    .btn-change {
+      display: block; width: 100%; text-align: center;
+      background: none; border: none; color: #2a3f5f;
+      font-size: 12px; cursor: pointer; padding: 8px;
+      text-decoration: underline; -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ── Toast ───────────────────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 20px; left: 16px; right: 16px; z-index: 999;
+      background: #0a1628; border: 1px solid rgba(192,57,43,0.4);
+      color: #fca5a5; padding: 12px 16px; border-radius: 10px;
+      font-size: 13px; text-align: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 1 — Register
+     ════════════════════════════════════════════════ -->
+<div id="screen-register" class="screen">
+
+  <div class="logo-row">
+    <div class="logo-icon">T</div>
+    <div>
+      <div class="logo-name">TrikMed</div>
+      <div class="logo-sub">Voice Data Collection</div>
+    </div>
+  </div>
+
+  <h2>Apni info bharo</h2>
+
+  <!-- id="register-form" lets the new JS use a submit event listener -->
+  <form id="register-form">
+
+    <div class="field">
+      <div class="field-label">Naam</div>
+      <input type="text" id="inp-name" placeholder="Dr. Rahul Kumar"
+             autocomplete="name" autocapitalize="words" autocorrect="off">
+    </div>
+
+    <div class="field">
+      <div class="field-label">Phone Number</div>
+      <input type="tel" id="inp-phone" placeholder="10-digit number"
+             maxlength="10" inputmode="numeric" pattern="[0-9]*">
+    </div>
+
+    <div class="field">
+      <div class="field-label">Specialization</div>
+      <select id="inp-spec">
+        <option value="">Select…</option>
+        <option>General Medicine / MBBS</option>
+        <option>Pediatrics</option>
+        <option>Gynecology</option>
+        <option>Orthopedics</option>
+        <option>Dermatology</option>
+        <option>ENT</option>
+        <option>Other</option>
+      </select>
+    </div>
+
+    <div class="toggle-row">
+      <div>
+        <div class="t-title">Patient bhi saath mein hain?</div>
+        <div class="t-sub">Patient ki baat bhi record hogi — zyada valuable data</div>
+      </div>
+      <label class="sw">
+        <input type="checkbox" id="patient-toggle">
+        <span class="sw-track"></span>
+        <span class="sw-thumb"></span>
+      </label>
+    </div>
+
+    <button type="submit" class="btn-primary" id="btn-reg">
+      Recording Shuru Karo →
+    </button>
+
+  </form>
+
+</div>
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 2 — Record
+     ════════════════════════════════════════════════ -->
+<div id="screen-record" class="screen">
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="top-name" id="d-name">—</div>
+    <div class="clip-badge">Clip <span id="session-count">0</span></div>
+  </div>
+
+  <!-- Stats: session-count, auto-save indicator, today-count -->
+  <div class="stats-row">
+    <div class="stat-chip">Saved: <span id="saved-count">0</span></div>
+    <div class="stat-chip green">Auto-save: ON ✓</div>
+    <div class="stat-chip">Today: <span id="today-count">—</span></div>
+  </div>
+
+  <!-- Template card -->
+  <div class="tmpl-card">
+    <div class="tmpl-header">
+      <span class="tmpl-label-text">
+        📋 Template #<span id="template-num">1</span> — Zor se padho:
+      </span>
+      <button class="btn-next" id="next-template-btn">Next →</button>
+    </div>
+    <div class="tmpl-text" id="template-text">Loading…</div>
+  </div>
+
+  <!-- Waveform: 20 bars built by JS -->
+  <div class="waveform" id="waveform"></div>
+
+  <!-- Timer -->
+  <div class="timer" id="timer">00:00</div>
+
+  <!-- Record button (click handled by event listener in JS) -->
+  <div class="rec-zone">
+    <div class="rec-wrap">
+      <div class="pulse-ring" id="pulse-ring"></div>
+      <button class="rec-btn" id="rec-btn">
+        <span id="rec-icon"></span>
+      </button>
+    </div>
+    <div class="rec-btn-label" id="rec-label">Tap to Record</div>
+  </div>
+
+  <!-- Status + recording ID -->
+  <div class="status-line" id="status-text" style="color:#4a6080;">Taiyar hain</div>
+  <div class="rec-id" id="rec-id">—</div>
+
+  <!-- Change user (click handled by event listener in JS) -->
+  <button class="btn-change" id="change-user-btn">Change User</button>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────
+// SVG constants (fixes the placeholder in the user-supplied code)
+// ─────────────────────────────────────────────────────────────────
+const MIC_SVG  = `<svg viewBox="0 0 24 24" fill="white" width="30" height="30"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>`;
+
+// ─────────────────────────────────────────────────────────────────
+// BUILD WAVEFORM — 20 bars, arch-shaped heights
+// ─────────────────────────────────────────────────────────────────
+(function buildWaveform() {
+  const wf = document.getElementById('waveform');
+  for (let i = 0; i < 20; i++) {
+    const angle = (i / 19) * Math.PI;
+    const bar = document.createElement('div');
+    bar.className = 'wave-bar';
+    // store max height for animation via JS
+    bar.dataset.maxH = Math.round(10 + Math.sin(angle) * 26);
+    wf.appendChild(bar);
+  }
+  // seed idle icon
+  document.getElementById('rec-icon').innerHTML = MIC_SVG;
+})();
+
+// ─────────────────────────────────────────────────────────────────
+// USER-SUPPLIED JAVASCRIPT (with SVG placeholder fixed)
+// ─────────────────────────────────────────────────────────────────
+
+const TEMPLATES = []; // will be filled from API
+let currentTemplateIndex = 0;
+let sessionCount = 0;
+let elapsedSeconds = 0;
+let timerInterval = null;
+let chunks = [];
+let mediaRecorder = null;
+let isRecording = false;
+
+// Load templates on page load
+async function loadTemplates() {
+  try {
+    const res = await fetch('/api/templates');
+    const data = await res.json();
+    TEMPLATES.push(...data);
+    showRandomTemplate();
+  } catch(e) { /* use fallback template */ }
+}
+
+function showRandomTemplate() {
+  currentTemplateIndex = Math.floor(Math.random() * TEMPLATES.length);
+  const t = TEMPLATES[currentTemplateIndex];
+  document.getElementById('template-text').textContent = t.text;
+  document.getElementById('template-num').textContent = currentTemplateIndex + 1;
+}
+
+function generateRecordingId() {
+  const s = JSON.parse(localStorage.getItem('trikmed_student'));
+  return `REC-${s.initials}-${s.phone.slice(-4)}-${Date.now()}`;
+}
+
+let currentId = '';
+
+async function toggleRecording() {
+  if (!isRecording) {
+    // CHECK BROWSER SUPPORT
+    if (!navigator.mediaDevices || !window.MediaRecorder) {
+      alert('Chrome browser use karo'); return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000 }
+      });
+      chunks = [];
+      currentId = generateRecordingId();
+      document.getElementById('rec-id').textContent = currentId;
+
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus' : 'audio/webm';
+      mediaRecorder = new MediaRecorder(stream, { mimeType });
+
+      mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+
+      mediaRecorder.onstop = () => {
+        stream.getTracks().forEach(t => t.stop());
+        const blob = new Blob(chunks, { type: mimeType });
+        uploadRecording(blob); // fire and forget
+      };
+
+      mediaRecorder.onerror = () => { setUIState('idle'); };
+      mediaRecorder.start();
+      isRecording = true;
+      elapsedSeconds = 0;
+      timerInterval = setInterval(() => {
+        elapsedSeconds++;
+        const m = Math.floor(elapsedSeconds/60).toString().padStart(2,'0');
+        const s = (elapsedSeconds%60).toString().padStart(2,'0');
+        document.getElementById('timer').textContent = `${m}:${s}`;
+      }, 1000);
+      setUIState('recording');
+    } catch(err) {
+      if (err.name === 'NotAllowedError') alert('Microphone permission do — Settings mein jaao');
+      else alert('Microphone nahi mila, dobara try karo');
+      setUIState('idle');
+    }
+  } else {
+    // STOP — IMMEDIATE UI feedback
+    isRecording = false;
+    clearInterval(timerInterval);
+    setUIState('saving');
+    mediaRecorder.stop();
+  }
+}
+
+async function uploadRecording(blob) {
+  const s = JSON.parse(localStorage.getItem('trikmed_student'));
+  const form = new FormData();
+  form.append('audio', blob, currentId + '.webm');
+  form.append('student_id', s.student_id);
+  form.append('student_name', s.name);
+  form.append('student_initials', s.initials);
+  form.append('phone_last4', s.phone.slice(-4));
+  form.append('template_id', currentTemplateIndex);
+  form.append('template_text', TEMPLATES[currentTemplateIndex]?.text || '');
+  form.append('duration_sec', elapsedSeconds);
+  form.append('patient_mode', s.patient_mode ? 1 : 0);
+
+  // Show saved immediately after 400ms (don't wait for server)
+  setTimeout(() => {
+    sessionCount++;
+    document.getElementById('session-count').textContent = sessionCount;
+    setUIState('saved');
+    setTimeout(() => {
+      showRandomTemplate();
+      currentId = generateRecordingId();
+      document.getElementById('rec-id').textContent = currentId;
+      document.getElementById('timer').textContent = '00:00';
+      setUIState('idle');
+      updateStats();
+    }, 1500);
+  }, 400);
+
+  // Upload in background — silent retry on fail
+  try {
+    await fetch('/api/upload', {
+      method: 'POST',
+      body: form,
+      signal: AbortSignal.timeout ? AbortSignal.timeout(15000) : (() => { const c = new AbortController(); setTimeout(() => c.abort(), 15000); return c.signal; })()
+    });
+  } catch(e) {
+    // Silently save to retry queue
+    const queue = JSON.parse(localStorage.getItem('retry_queue') || '[]');
+    queue.push({ id: currentId, timestamp: Date.now() });
+    localStorage.setItem('retry_queue', JSON.stringify(queue));
+  }
+}
+
+function setUIState(state) {
+  const btn    = document.getElementById('rec-btn');
+  const status = document.getElementById('status-text');
+  const timer  = document.getElementById('timer');
+  const label  = document.getElementById('rec-label');
+  const pulse  = document.getElementById('pulse-ring');
+  const waves  = document.querySelectorAll('.wave-bar');
+
+  if (state === 'idle') {
+    document.getElementById('rec-icon').innerHTML = MIC_SVG; // ← fixed placeholder
+    btn.style.background = '#C0392B';
+    btn.disabled = false;
+    label.textContent = 'Tap to Record';
+    status.textContent = 'Taiyar hain';
+    status.style.color = '#7f8c8d';
+    timer.style.color = 'white';
+    pulse.classList.remove('on');
+    waves.forEach(w => { w.style.animation = 'none'; w.style.height = '8px'; w.style.background = '#1e3a5f'; });
+  } else if (state === 'recording') {
+    btn.innerHTML = '<div style="width:26px;height:26px;background:white;border-radius:5px;"></div>';
+    btn.style.background = '#C0392B';
+    btn.disabled = false;
+    label.textContent = 'Tap to Stop';
+    status.textContent = '● Bol rahe hain...';
+    status.style.color = '#C0392B';
+    timer.style.color = '#C0392B';
+    pulse.classList.add('on');
+    waves.forEach((w, i) => {
+      w.style.background = '#C0392B';
+      w.style.animation = `wave${i%5} 0.${5+i%4}s ease-in-out infinite alternate`;
+    });
+  } else if (state === 'saving') {
+    btn.style.background = '#7f8c8d';
+    btn.disabled = true;
+    label.textContent = '';
+    status.textContent = '↑ Save ho raha hai...';
+    status.style.color = '#f39c12';
+    pulse.classList.remove('on');
+    waves.forEach(w => { w.style.animation = 'none'; w.style.height = '8px'; w.style.background = '#1e3a5f'; });
+  } else if (state === 'saved') {
+    status.textContent = `✓ Saved! — ${currentId}`;
+    status.style.color = '#27ae60';
+  }
+}
+
+async function updateStats() {
+  try {
+    const res = await fetch('/api/stats');
+    const d = await res.json();
+    document.getElementById('today-count').textContent = d.today_recordings;
+    // also refresh saved count from student's running total
+    const s = JSON.parse(localStorage.getItem('trikmed_student') || 'null');
+    if (s) document.getElementById('saved-count').textContent = s.total_recordings || 0;
+  } catch(e) {}
+}
+
+// Register form submit
+document.getElementById('register-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name    = document.getElementById('inp-name').value.trim();
+  const phone   = document.getElementById('inp-phone').value.trim();
+  const spec    = document.getElementById('inp-spec').value;
+  const patient = document.getElementById('patient-toggle')?.checked || false;
+
+  const btn = document.getElementById('btn-reg');
+  btn.disabled = true; btn.textContent = 'Loading…';
+
+  try {
+    const res = await fetch('/api/register', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ name, phone, specialization: spec, patient_mode: patient })
+    });
+    const data = await res.json();
+    data.patient_mode = patient ? 1 : 0;
+    localStorage.setItem('trikmed_student', JSON.stringify(data));
+    document.getElementById('d-name').textContent = data.name;
+    document.getElementById('saved-count').textContent = data.total_recordings || 0;
+    showScreen('screen-record');
+    loadTemplates();
+    updateStats();
+  } catch(e) {
+    alert('Server se connect nahi ho paya. Backend chal raha hai?');
+    btn.disabled = false; btn.textContent = 'Recording Shuru Karo →';
+  }
+});
+
+// Main button
+document.getElementById('rec-btn')?.addEventListener('click', toggleRecording);
+
+// Space bar shortcut
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' && document.getElementById('screen-record').classList.contains('active')) {
+    e.preventDefault();
+    toggleRecording();
+  }
+});
+
+// Next template button
+document.getElementById('next-template-btn')?.addEventListener('click', () => {
+  if (!isRecording) showRandomTemplate();
+});
+
+// Change user
+document.getElementById('change-user-btn')?.addEventListener('click', () => {
+  if (isRecording) { isRecording = false; clearInterval(timerInterval); if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop(); }
+  localStorage.removeItem('trikmed_student');
+  sessionCount = 0;
+  TEMPLATES.length = 0;
+  setUIState('idle');
+  document.getElementById('timer').textContent = '00:00';
+  document.getElementById('rec-id').textContent = '—';
+  document.getElementById('session-count').textContent = '0';
+  document.getElementById('btn-reg').disabled = false;
+  document.getElementById('btn-reg').textContent = 'Recording Shuru Karo →';
+  showScreen('screen-register');
+});
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// Add CSS wave animations
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes wave0{0%{height:8px}100%{height:40px}}
+  @keyframes wave1{0%{height:12px}100%{height:52px}}
+  @keyframes wave2{0%{height:6px}100%{height:44px}}
+  @keyframes wave3{0%{height:10px}100%{height:36px}}
+  @keyframes wave4{0%{height:8px}100%{height:48px}}
+  #rec-btn { transition: transform 0.1s; }
+  #rec-btn:active { transform: scale(0.95); }
+`;
+document.head.appendChild(style);
+
+// ── Service Worker registration ───────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(e => console.warn('SW registration failed:', e));
+  });
+}
+
+// Init on page load
+const _savedStudent = localStorage.getItem('trikmed_student');
+if (_savedStudent) {
+  try {
+    const s = JSON.parse(_savedStudent);
+    document.getElementById('d-name').textContent = s.name;
+    document.getElementById('saved-count').textContent = s.total_recordings || 0;
+    showScreen('screen-record');
+    loadTemplates();
+    updateStats();
+  } catch(e) {
+    localStorage.removeItem('trikmed_student');
+    showScreen('screen-register');
+  }
+} else {
+  showScreen('screen-register');
+}
+</script>
+</body>
+</html>

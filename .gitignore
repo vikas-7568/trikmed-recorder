@@ -1,0 +1,6 @@
+recordings/
+*.db
+*.sqlite
+__pycache__/
+.env
+venv/
