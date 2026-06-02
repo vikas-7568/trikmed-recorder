@@ -508,6 +508,8 @@ async function uploadRecording(blob) {
   setTimeout(() => {
     sessionCount++;
     document.getElementById('session-count').textContent = sessionCount;
+    const savedEl = document.getElementById('saved-count');
+    if (savedEl) savedEl.textContent = sessionCount;
 
     // Reset everything — order matters
     chunks = [];
@@ -600,10 +602,8 @@ async function updateStats() {
   try {
     const res = await fetch('/api/stats');
     const d = await res.json();
-    document.getElementById('today-count').textContent = d.today_recordings;
-    // also refresh saved count from student's running total
-    const s = JSON.parse(localStorage.getItem('trikmed_student') || 'null');
-    if (s) document.getElementById('saved-count').textContent = s.total_recordings || 0;
+    const el = document.getElementById('today-count');
+    if (el) el.textContent = d.today_recordings || 0;
   } catch(e) {}
 }
 
