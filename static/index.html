@@ -281,13 +281,26 @@
     <div class="field">
       <div class="field-label">Specialization</div>
       <select id="inp-spec">
-        <option value="">Select…</option>
+        <option value="">Select Specialization</option>
         <option>General Medicine / MBBS</option>
         <option>Pediatrics</option>
-        <option>Gynecology</option>
+        <option>Gynecology &amp; Obstetrics</option>
         <option>Orthopedics</option>
+        <option>Cardiology</option>
         <option>Dermatology</option>
         <option>ENT</option>
+        <option>Ophthalmology</option>
+        <option>Dentistry</option>
+        <option>Neurology</option>
+        <option>Psychiatry</option>
+        <option>Urology</option>
+        <option>Nephrology</option>
+        <option>Gastroenterology</option>
+        <option>Pulmonology</option>
+        <option>Endocrinology</option>
+        <option>Oncology</option>
+        <option>Rheumatology</option>
+        <option>General Surgery</option>
         <option>Other</option>
       </select>
     </div>
@@ -492,22 +505,31 @@ async function uploadRecording(blob) {
   form.append('duration_sec', elapsedSeconds);
   form.append('patient_mode', s.patient_mode ? 1 : 0);
 
-  // Show saved immediately after 400ms (don't wait for server)
   setTimeout(() => {
     sessionCount++;
     document.getElementById('session-count').textContent = sessionCount;
-    setUIState('saved');
-    setTimeout(() => {
-      isRecording = false;
-      chunks = [];
-      showRandomTemplate();
-      currentId = generateRecordingId();
-      document.getElementById('rec-id').textContent = currentId;
-      document.getElementById('timer').textContent = '00:00';
-      setUIState('idle');
-      updateStats();
-    }, 1500);
-  }, 400);
+
+    // Reset everything — order matters
+    chunks = [];
+    isRecording = false;
+    elapsedSeconds = 0;
+    document.getElementById('timer').textContent = '00:00';
+
+    // Re-enable button — force it
+    const btn = document.getElementById('rec-btn');
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+    btn.style.cursor = 'pointer';
+
+    // Load next template automatically
+    showRandomTemplate();
+    currentId = generateRecordingId();
+    document.getElementById('rec-id').textContent = currentId;
+
+    setUIState('idle');
+    updateStats();
+  }, 1500);
 
   // Upload in background — silent retry on fail
   try {
