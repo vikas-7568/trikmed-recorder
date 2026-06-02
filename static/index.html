@@ -615,47 +615,64 @@ function setUIState(state) {
   const timer  = document.getElementById('timer');
   const label  = document.getElementById('rec-label');
   const pulse  = document.getElementById('pulse-ring');
+  const iconEl = document.getElementById('rec-icon');
   const waves  = document.querySelectorAll('.wave-bar');
 
+  if (!btn || !status || !timer) return;
+
   if (state === 'idle') {
-    const iconEl = document.getElementById('rec-icon');
     if (iconEl) iconEl.innerHTML = MIC_SVG;
     btn.disabled = false;
     btn.style.opacity = '1';
     btn.style.pointerEvents = 'auto';
     btn.style.cursor = 'pointer';
     btn.style.background = '#C0392B';
-    label.textContent = 'Tap to Record';
+    if (label) label.textContent = 'Tap to Record';
     status.textContent = 'Ready';
     status.style.color = '#7f8c8d';
     timer.style.color = 'white';
-    pulse.classList.remove('on');
-    waves.forEach(w => { w.style.animation = 'none'; w.style.height = '8px'; w.style.background = '#1e3a5f'; });
+    if (pulse) pulse.classList.remove('on');
+    waves.forEach(w => {
+      w.style.animation = 'none';
+      w.style.height = '8px';
+      w.style.background = '#1e3a5f';
+    });
+
   } else if (state === 'recording') {
-    document.getElementById('rec-icon').innerHTML = '<div style="width:26px;height:26px;background:white;border-radius:5px;"></div>';
-    btn.style.background = '#C0392B';
+    if (iconEl) iconEl.innerHTML =
+      '<div style="width:26px;height:26px;' +
+      'background:white;border-radius:5px;"></div>';
     btn.disabled = false;
-    label.textContent = 'Tap to Stop';
+    btn.style.background = '#C0392B';
+    if (label) label.textContent = 'Tap to Stop';
     status.textContent = '● Recording...';
     status.style.color = '#C0392B';
     timer.style.color = '#C0392B';
-    pulse.classList.add('on');
+    if (pulse) pulse.classList.add('on');
     waves.forEach((w, i) => {
       w.style.background = '#C0392B';
-      w.style.animation = `wave${i%5} 0.${5+i%4}s ease-in-out infinite alternate`;
+      w.style.animation =
+        'wave'+(i%5)+' 0.'+(5+i%4)+
+        's ease-in-out infinite alternate';
     });
+
   } else if (state === 'saving') {
     btn.disabled = true;
     btn.style.opacity = '0.6';
     btn.style.pointerEvents = 'none';
     btn.style.background = '#7f8c8d';
-    label.textContent = '';
+    if (label) label.textContent = '';
     status.textContent = '↑ Saving...';
     status.style.color = '#f39c12';
-    pulse.classList.remove('on');
-    waves.forEach(w => { w.style.animation = 'none'; w.style.height = '8px'; w.style.background = '#1e3a5f'; });
+    if (pulse) pulse.classList.remove('on');
+    waves.forEach(w => {
+      w.style.animation = 'none';
+      w.style.height = '8px';
+      w.style.background = '#1e3a5f';
+    });
+
   } else if (state === 'saved') {
-    status.textContent = `✓ Saved! — ${currentId}`;
+    status.textContent = '✓ Saved! — ' + currentId;
     status.style.color = '#27ae60';
   }
 }
