@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 import aiosqlite
-from database import init_db, get_db
+from database import init_db, get_db, DB_PATH
 
 RECORDINGS_DIR = Path("recordings")
 STATIC_DIR = Path("static")
@@ -223,40 +223,41 @@ async def get_templates():
 
 
 @app.get("/api/stats")
-async def get_stats(db: aiosqlite.Connection = Depends(get_db)):
+async def get_stats():
     try:
-        today = datetime.now().strftime("%Y-%m-%d")
+        async with aiosqlite.connect(DB_PATH) as db:
+            today = datetime.now().strftime("%Y-%m-%d")
 
-        async with db.execute("SELECT COUNT(*) as cnt FROM recordings") as cur:
-            total_recordings = (await cur.fetchone())["cnt"]
-        async with db.execute(
-            "SELECT COUNT(DISTINCT doctor_id) as cnt FROM recordings WHERE doctor_id IS NOT NULL"
-        ) as cur:
-            total_doctors = (await cur.fetchone())["cnt"]
-        async with db.execute(
-            "SELECT COUNT(*) as cnt FROM recordings WHERE COALESCE(record_date, DATE(created_at)) = ?",
-            (today,)
-        ) as cur:
-            today_recordings = (await cur.fetchone())["cnt"]
-        async with db.execute(
-            """SELECT doctor_id, doctor_name, COUNT(*) as clips_today
-               FROM recordings
-               WHERE COALESCE(record_date, DATE(created_at)) = ? AND doctor_id IS NOT NULL
-               GROUP BY doctor_id, doctor_name
-               ORDER BY clips_today DESC""",
-            (today,)
-        ) as cur:
-            today_rows = await cur.fetchall()
+            cur = await db.execute("SELECT COUNT(*) FROM recordings")
+            total = (await cur.fetchone())[0]
 
-        return {
-            "today_recordings": today_recordings,
-            "total_recordings": total_recordings,
-            "total_doctors":    total_doctors,
-            "today_doctors":    [
-                {"doctor_id": r["doctor_id"], "doctor_name": r["doctor_name"], "clips_today": r["clips_today"]}
-                for r in today_rows
-            ],
-        }
+            cur = await db.execute(
+                "SELECT COUNT(*) FROM recordings WHERE record_date = ?", (today,))
+            today_count = (await cur.fetchone())[0]
+
+            cur = await db.execute(
+                "SELECT COUNT(DISTINCT doctor_id) FROM recordings")
+            total_doctors = (await cur.fetchone())[0]
+
+            cur = await db.execute("""
+                SELECT doctor_id, doctor_name, COUNT(*) as clips_today
+                FROM recordings
+                WHERE record_date = ?
+                GROUP BY doctor_id, doctor_name
+                ORDER BY clips_today DESC
+            """, (today,))
+            rows = await cur.fetchall()
+            today_doctors = [
+                {"doctor_id": r[0], "doctor_name": r[1], "clips_today": r[2]}
+                for r in rows
+            ]
+
+            return {
+                "total_recordings": total,
+                "today_recordings": today_count,
+                "total_doctors":    total_doctors,
+                "today_doctors":    today_doctors,
+            }
     except Exception as e:
         print(f"Stats error: {e}")
         raise HTTPException(status_code=500, detail="Stats fetch failed")
@@ -334,10 +335,15 @@ async def get_all_recordings(db: aiosqlite.Connection = Depends(get_db)):
 @app.get("/api/audio/{recording_id}")
 async def get_audio(recording_id: str):
     try:
-        audio_path = RECORDINGS_DIR / f"{recording_id}.webm"
-        if not audio_path.exists():
-            raise HTTPException(status_code=404, detail="Audio file not found")
-        return FileResponse(str(audio_path), media_type="audio/webm")
+        for ext in [".webm", ".mp3", ".wav", ".ogg"]:
+            path = RECORDINGS_DIR / f"{recording_id}{ext}"
+            if path.exists():
+                return FileResponse(str(path))
+        # Also try exact filename (no extension appended)
+        exact = RECORDINGS_DIR / recording_id
+        if exact.exists():
+            return FileResponse(str(exact))
+        raise HTTPException(status_code=404, detail="Audio not found")
     except HTTPException:
         raise
     except Exception as e:
