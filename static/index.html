@@ -383,7 +383,9 @@ async function upload(blob){
 
 async function getStats(){
   try{
-    const d=await fetch('/api/stats').then(r=>r.json());
+    const u=JSON.parse(localStorage.getItem('tmu')||'{}');
+    const did=u.doctor_id||'';
+    const d=await fetch('/api/stats?doctor_id='+did).then(r=>r.json());
     const el=document.getElementById('n-today');
     if(el)el.textContent=d.today_recordings??0;
   }catch(e){}
@@ -435,7 +437,9 @@ document.getElementById('c-today').addEventListener('click',async e=>{
   e.stopPropagation();
   openPanel(e.currentTarget,'<div class="pr-empty">Loading…</div>');
   try{
-    const d=await fetch('/api/stats').then(r=>r.json());
+    const u=JSON.parse(localStorage.getItem('tmu')||'{}');
+    const did=u.doctor_id||'';
+    const d=await fetch('/api/stats?doctor_id='+did).then(r=>r.json());
     const ov=document.getElementById('ov');
     const p=ov.querySelector('.pop');
     if(!p)return;

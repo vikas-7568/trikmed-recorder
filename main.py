@@ -98,18 +98,40 @@ async def audio(rid: str):
     raise HTTPException(404)
 
 @app.get("/api/stats")
-async def stats():
+async def stats(doctor_id: str = ""):
     today = datetime.now().strftime("%Y-%m-%d")
     async with aiosqlite.connect(DB) as db:
-        total = (await (await db.execute("SELECT COUNT(*) FROM recordings")).fetchone())[0]
-        tc = (await (await db.execute(
-            "SELECT COUNT(*) FROM recordings WHERE record_date=?", (today,))).fetchone())[0]
-        docs = await (await db.execute("""
-            SELECT doctor_id,doctor_name,COUNT(*) FROM recordings
-            WHERE record_date=? GROUP BY doctor_id""", (today,))).fetchall()
-        return {"total_recordings":total,"today_recordings":tc,
-                "today_doctors":[{"doctor_id":r[0],"doctor_name":r[1],
-                "clips_today":r[2]} for r in docs]}
+        if doctor_id:
+            total = (await (await db.execute(
+                "SELECT COUNT(*) FROM recordings WHERE doctor_id=?",
+                (doctor_id,))).fetchone())[0]
+            tc = (await (await db.execute(
+                "SELECT COUNT(*) FROM recordings WHERE doctor_id=? AND record_date=?",
+                (doctor_id, today))).fetchone())[0]
+            docs = await (await db.execute("""
+                SELECT doctor_id, doctor_name, COUNT(*)
+                FROM recordings
+                WHERE doctor_id=? AND record_date=?
+                GROUP BY doctor_id""",
+                (doctor_id, today))).fetchall()
+        else:
+            total = (await (await db.execute(
+                "SELECT COUNT(*) FROM recordings")).fetchone())[0]
+            tc = (await (await db.execute(
+                "SELECT COUNT(*) FROM recordings WHERE record_date=?",
+                (today,))).fetchone())[0]
+            docs = await (await db.execute("""
+                SELECT doctor_id, doctor_name, COUNT(*)
+                FROM recordings WHERE record_date=?
+                GROUP BY doctor_id""", (today,))).fetchall()
+        return {
+            "total_recordings": total,
+            "today_recordings": tc,
+            "today_doctors": [
+                {"doctor_id":r[0],"doctor_name":r[1],"clips_today":r[2]}
+                for r in docs
+            ]
+        }
 
 @app.get("/api/doctor/{doctor_id}/recordings")
 async def doctor_recordings(doctor_id: str):
