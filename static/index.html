@@ -2,318 +2,520 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Salon Research">
-<meta name="theme-color" content="#FF5C00">
-<title>Salon Research</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>TrikMed — Voice Data Collection</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-:root{--o:#FF5C00;--ol:#FFF0E8;--g:#00C97A;--gl:#E8FFF4;--r:#FF4545;--rl:#FFF0F0;--b:#3B82F6;--bl:#EFF6FF;--y:#F59E0B;--yl:#FFFBEB;--bg:#F8F9FA;--w:#fff;--tx:#1A1A2E;--mu:#9CA3AF;--br:#E5E7EB}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;max-width:430px;margin:0 auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
-.scr{display:none;min-height:100vh;flex-direction:column}
-.scr.on{display:flex}
-.tb{background:var(--w);padding:54px 20px 14px;border-bottom:1px solid var(--br);display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
-.tb-bk{width:36px;height:36px;background:var(--bg);border:none;border-radius:10px;cursor:pointer;font-size:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-.tb-ti{font-size:17px;font-weight:700;flex:1}
-.tb-ac{color:#fff;border:none;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
-.hh{background:var(--w);padding:56px 20px 18px;border-bottom:1px solid var(--br)}
-.ht{font-size:24px;font-weight:700}
-.hs{font-size:13px;color:var(--mu);margin-top:3px}
-.st{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:12px 20px;background:var(--w);border-bottom:1px solid var(--br)}
-.si{text-align:center}
-.sn{font-size:18px;font-weight:700;color:var(--o)}
-.sl{font-size:10px;color:var(--mu);margin-top:1px}
-.ab{margin:14px 20px;background:var(--o);color:#fff;border:none;width:calc(100% - 40px);padding:15px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 16px rgba(255,92,0,.3)}
-.ab:active{opacity:.9}
-.eb{display:flex;gap:8px;padding:0 20px 12px}
-.ebt{flex:1;padding:10px 6px;border-radius:10px;font-size:12px;font-weight:700;border:1.5px solid;background:var(--w);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px}
-.ebt:active{opacity:.8}
-.eg{border-color:var(--g);color:var(--g);background:var(--gl)}
-.em{border-color:var(--b);color:var(--b);background:var(--bl)}
-/* INSTALL BANNER — Simple */
-.ib{margin:0 20px 10px;background:var(--o);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;cursor:pointer}
-.ib-t{font-size:14px;font-weight:700;color:#fff;flex:1}
-.sw{padding:0 20px 10px;position:relative}
-.si2{position:absolute;left:34px;top:50%;transform:translateY(-50%);color:var(--mu);font-size:15px;pointer-events:none}
-.sinp{width:100%;padding:11px 14px 11px 38px;border:1.5px solid var(--br);border-radius:12px;font-size:15px;background:var(--w);font-family:inherit}
-.sinp:focus{outline:none;border-color:var(--o)}
-.fts{display:flex;gap:8px;padding:0 20px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch}
-.fts::-webkit-scrollbar{display:none}
-.ft{padding:6px 14px;border-radius:100px;font-size:12px;font-weight:600;border:1.5px solid var(--br);background:var(--w);color:var(--mu);cursor:pointer;white-space:nowrap}
-.ft.on{background:var(--o);border-color:var(--o);color:#fff}
-.ls{padding:0 20px 100px;display:flex;flex-direction:column;gap:10px}
-.cd{background:var(--w);border-radius:14px;padding:14px;box-shadow:0 2px 12px rgba(0,0,0,.08);cursor:pointer;border:1.5px solid transparent}
-.cd:active{opacity:.9}
-.cd.interested{border-color:var(--g)}.cd.not-interested{border-color:var(--br);opacity:.7}.cd.followup{border-color:var(--y)}
-.ct{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
-.cn{font-size:15px;font-weight:700}.co{font-size:12px;color:var(--mu);margin-top:2px}
-.bg{padding:3px 9px;border-radius:100px;font-size:10px;font-weight:700;flex-shrink:0;margin-left:6px}
-.bi{background:var(--gl);color:var(--g)}.bnot{background:var(--br);color:var(--mu)}.bfu{background:var(--yl);color:var(--y)}.bpd{background:var(--bl);color:var(--b)}
-.ci{display:flex;gap:10px;margin-bottom:8px;flex-wrap:wrap}
-.cii{font-size:11px;color:var(--mu)}
-.cp{background:var(--bg);border-radius:8px;padding:7px 10px;font-size:12px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.cf{display:flex;justify-content:space-between;margin-top:8px}
-.cdt{font-size:11px;color:var(--mu)}.cfd{font-size:11px;font-weight:600;color:var(--y)}
-.emp{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center}
-.ei{font-size:52px;margin-bottom:14px}.et{font-size:17px;font-weight:700;margin-bottom:6px}.es{font-size:13px;color:var(--mu);line-height:1.6}
-.fb{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 20px 130px}
-.fst{font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin:18px 0 9px}
-.fst:first-child{margin-top:0}
-.ig{margin-bottom:11px}
-.il{font-size:13px;font-weight:600;margin-bottom:5px;display:block}
-.ifd{width:100%;padding:12px 14px;border:1.5px solid var(--br);border-radius:12px;font-size:15px;background:var(--w);color:var(--tx);font-family:inherit;-webkit-appearance:none}
-.ifd:focus{outline:none;border-color:var(--o)}
-textarea.ifd{resize:none;min-height:75px;line-height:1.5}
-.cs{display:flex;align-items:center;gap:10px}
-.cbtn{width:42px;height:42px;border-radius:12px;border:2px solid var(--br);background:var(--w);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;font-weight:600}
-.cbtn:active{background:var(--ol);border-color:var(--o)}
-.cdisp{font-size:26px;font-weight:700;color:var(--o);min-width:55px;text-align:center}
-.csub{font-size:11px;color:var(--mu);text-align:center}
-.ss{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.so{padding:11px 6px;border-radius:12px;border:2px solid var(--br);text-align:center;cursor:pointer}
-.so:active{opacity:.9}
-.soic{font-size:19px;margin-bottom:3px}.solb{font-size:11px;font-weight:600;color:var(--mu)}
-.s-i{border-color:var(--g);background:var(--gl)}.s-i .solb{color:var(--g)}
-.s-f{border-color:var(--y);background:var(--yl)}.s-f .solb{color:var(--y)}
-.s-n{border-color:var(--r);background:var(--rl)}.s-n .solb{color:var(--r)}
-.pu{border:2px dashed var(--br);border-radius:12px;padding:16px;text-align:center;cursor:pointer;background:var(--w)}
-.pu:active{border-color:var(--o)}
-.pui{font-size:24px;margin-bottom:4px}.put{font-size:13px;color:var(--mu);font-weight:500}
-.pp{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.pt{width:70px;height:70px;border-radius:10px;object-fit:cover;border:2px solid var(--br)}
-input[type=file]{display:none}
-.vbox{background:var(--bl);border:1.5px solid var(--b);border-radius:12px;padding:12px 14px;margin-bottom:8px}
-.vbox-t{font-size:12px;font-weight:700;color:var(--b);margin-bottom:6px}
-.vbox-s{font-size:11px;color:var(--mu);margin-bottom:8px;line-height:1.5}
-.vadd{display:flex;gap:8px}
-.vinp{flex:1;padding:10px 12px;border:1.5px solid var(--br);border-radius:10px;font-size:13px;background:var(--w);font-family:inherit}
-.vinp:focus{outline:none;border-color:var(--b)}
-.vbtn{background:var(--b);color:#fff;border:none;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
-.vbtn:active{opacity:.8}
-.vlist{display:flex;flex-direction:column;gap:6px;margin-top:8px}
-.vitem{background:var(--w);border:1px solid var(--br);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px}
-.vitem-ic{font-size:16px;flex-shrink:0}
-.vitem-tx{flex:1;font-size:12px;font-weight:600;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.vitem-del{background:none;border:none;color:var(--mu);font-size:14px;cursor:pointer;padding:4px;flex-shrink:0}
-.sb{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;padding:12px 20px 32px;background:var(--w);border-top:1px solid var(--br);z-index:100}
-.sbb{background:var(--o);color:#fff;border:none;width:100%;padding:15px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(255,92,0,.3)}
-.sbb:active{opacity:.9}
-.db{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 20px 100px}
-.sbr{padding:13px 15px;border-radius:13px;margin-bottom:14px;display:flex;align-items:center;gap:10px}
-.sbr.interested{background:var(--gl)}.sbr.not-interested{background:var(--br)}.sbr.followup{background:var(--yl)}.sbr.pending{background:var(--bl)}
-.dc{background:var(--w);border-radius:14px;padding:15px;margin-bottom:10px;box-shadow:0 2px 12px rgba(0,0,0,.08)}
-.dct{font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
-.dr{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--br)}
-.dr:last-child{border-bottom:none;padding-bottom:0}
-.dk{font-size:13px;color:var(--mu)}.dv{font-size:13px;font-weight:600;text-align:right;max-width:60%;word-break:break-word}
-a.callbtn{background:var(--g);color:#fff;border:none;width:100%;padding:13px;border-radius:11px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:11px;text-decoration:none}
-a.wabtn{background:#25D366;color:#fff;border:none;width:100%;padding:13px;border-radius:11px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:7px;text-decoration:none}
-.delbtn{background:var(--rl);color:var(--r);border:none;width:100%;padding:13px;border-radius:11px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:7px}
-.delbtn:active{opacity:.8}
-.pg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
-.pg img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px}
-a.vlink{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bl);border-radius:10px;margin-bottom:6px;text-decoration:none}
-.vlink-tx{font-size:13px;font-weight:600;color:var(--b)}
-.mbg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
-.mbg.on{display:flex}
-.mod{background:var(--w);border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:430px}
-.mod-ti{font-size:17px;font-weight:700;margin-bottom:16px;text-align:center}
-.mbtn{width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;border:none;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px}
-.mbtn:active{opacity:.8}
-.mb-g{background:var(--gl);color:var(--g)}.mb-b{background:var(--bl);color:var(--b)}.mb-wa{background:#E8FFF4;color:#25D366}.mb-c{background:var(--bg);color:var(--mu)}
-.inst-step{background:var(--bg);border-radius:10px;padding:12px;margin-bottom:10px}
-.inst-title{font-size:13px;font-weight:700;margin-bottom:6px}
-.inst-text{font-size:12px;color:var(--mu);line-height:1.8}
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1A1A2E;color:#fff;padding:10px 20px;border-radius:100px;font-size:13px;font-weight:600;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center}
-.toast.on{opacity:1}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:#0F1F3D;
+  color:#fff;font-family:system-ui,sans-serif;
+  overflow:hidden;position:fixed}
+.screen{position:fixed;inset:0;overflow-y:auto;
+  overflow-x:hidden;padding:20px 18px 40px;display:none}
+.screen.active{display:block}
+#ov{position:fixed;inset:0;pointer-events:none;z-index:9999}
+.pop{position:absolute;pointer-events:all;
+  background:#0a1628;border:1.5px solid #C0392B;
+  border-radius:12px;padding:12px;min-width:250px;
+  max-height:210px;overflow-y:auto;
+  box-shadow:0 8px 32px rgba(0,0,0,.7)}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:24px}
+.logo-box{width:42px;height:42px;background:#C0392B;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:900;flex-shrink:0}
+.logo-t{font-size:15px;font-weight:800}
+.logo-s{font-size:11px;color:#4a6080;margin-top:2px}
+h2{font-size:20px;font-weight:700;margin-bottom:18px}
+.field{margin-bottom:12px}
+.lbl{font-size:10px;font-weight:700;color:#4a6080;
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+input,select{width:100%;padding:13px 14px;background:#152843;
+  border:1.5px solid #1e3a5f;border-radius:11px;color:#fff;
+  font-size:15px;outline:none;-webkit-appearance:none;appearance:none}
+input::placeholder{color:#3a5070}
+input:focus,select:focus{border-color:#C0392B}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%234a6080' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 13px center;padding-right:36px}
+select option{background:#152843}
+.tog-row{display:flex;align-items:center;justify-content:space-between;
+  gap:12px;padding:13px;background:#152843;border:1.5px solid #1e3a5f;
+  border-radius:11px;margin-bottom:18px}
+.tog-t{font-size:13px;font-weight:600}
+.tog-s{font-size:11px;color:#4a6080;margin-top:2px}
+.sw{position:relative;width:46px;height:24px;flex-shrink:0;cursor:pointer}
+.sw input{opacity:0;position:absolute;width:0;height:0}
+.sw-tr{position:absolute;inset:0;background:#1e3a5f;
+  border-radius:24px;transition:background .2s}
+.sw-th{position:absolute;width:18px;height:18px;top:3px;left:3px;
+  background:#fff;border-radius:50%;transition:transform .2s;pointer-events:none}
+.sw input:checked~.sw-tr{background:#C0392B}
+.sw input:checked~.sw-th{transform:translateX(22px)}
+.btn-p{width:100%;padding:15px;background:#C0392B;color:#fff;
+  border:none;border-radius:11px;font-size:15px;font-weight:700;
+  cursor:pointer;-webkit-tap-highlight-color:transparent}
+.btn-p:active{opacity:.85}
+.btn-p:disabled{opacity:.45;pointer-events:none}
+.topbar{display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:12px;gap:8px}
+.dr-name{font-size:15px;font-weight:700;flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dr-id{font-size:10px;color:#C0392B;font-weight:700;
+  letter-spacing:.04em;margin-top:2px}
+.clip-chip{background:#C0392B;color:#fff;font-size:11px;font-weight:700;
+  padding:4px 11px;border-radius:99px;cursor:pointer;flex-shrink:0;
+  -webkit-tap-highlight-color:transparent}
+.stats{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+.chip{padding:5px 11px;background:#152843;border:1px solid #1e3a5f;
+  border-radius:99px;font-size:11px;font-weight:600;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;user-select:none}
+.chip.grn{color:#22c55e;border-color:rgba(34,197,94,.3);cursor:default}
+.tmpl{background:#152843;border-left:3px solid #C0392B;
+  border-radius:11px;padding:14px;margin-bottom:14px}
+.tmpl-hdr{display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:8px}
+.tmpl-lbl{font-size:10px;font-weight:600;color:#4a6080;
+  text-transform:uppercase;letter-spacing:.07em}
+.btn-nxt{background:none;border:none;color:#4a6080;font-size:12px;
+  font-weight:600;cursor:pointer;padding:2px 4px;
+  -webkit-tap-highlight-color:transparent}
+.tmpl-txt{font-size:14px;line-height:1.7;color:#fff}
+.tmpl-note{font-size:10px;color:#4a6080;margin-top:8px;font-style:italic}
+.wf{display:flex;align-items:center;justify-content:center;
+  gap:3px;height:44px;margin-bottom:4px}
+.bar{width:3px;height:8px;background:#1e3a5f;border-radius:2px}
+.tmr{font-size:46px;font-family:'Courier New',monospace;
+  letter-spacing:-2px;text-align:center;color:#fff;
+  line-height:1;margin-bottom:16px;font-variant-numeric:tabular-nums}
+.rzone{display:flex;flex-direction:column;align-items:center;
+  gap:9px;margin-bottom:12px}
+.rwrap{position:relative;width:80px;height:80px}
+.pulse{position:absolute;inset:-9px;border-radius:50%;
+  border:3px solid #C0392B;opacity:0;pointer-events:none}
+.pulse.on{animation:pr 1.2s ease-out infinite}
+@keyframes pr{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.6);opacity:0}}
+.rbtn{position:relative;z-index:1;width:80px;height:80px;
+  border-radius:50%;background:#C0392B;border:none;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:transform .1s}
+.rbtn:active{transform:scale(.94)}
+.rbtn:disabled{opacity:.5;pointer-events:none}
+.rlbl{font-size:11px;font-weight:600;color:#4a6080}
+.sline{text-align:center;font-size:13px;font-weight:600;
+  min-height:18px;margin-bottom:6px}
+.rid{text-align:center;font-family:'Courier New',monospace;
+  font-size:10px;color:#2a3f5f;margin-bottom:12px;min-height:14px}
+.btn-ch{display:block;width:100%;text-align:center;background:none;
+  border:none;color:#2a3f5f;font-size:11px;cursor:pointer;
+  padding:8px;text-decoration:underline;
+  -webkit-tap-highlight-color:transparent}
+@keyframes w0{0%{height:8px}100%{height:38px}}
+@keyframes w1{0%{height:10px}100%{height:50px}}
+@keyframes w2{0%{height:6px}100%{height:42px}}
+@keyframes w3{0%{height:8px}100%{height:34px}}
+@keyframes w4{0%{height:10px}100%{height:46px}}
+.pr{display:flex;align-items:center;gap:7px;padding:7px 0;
+  border-bottom:1px solid #1a2f4a;font-size:12px}
+.pr:last-child{border-bottom:none}
+.pr-id{flex:1;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;color:#94a3b8;font-size:10px}
+.pr-dur{color:#4a6080;flex-shrink:0;font-family:monospace;font-size:10px}
+.pr-play{background:#C0392B;border:none;color:#fff;border-radius:6px;
+  padding:3px 9px;font-size:10px;font-weight:600;cursor:pointer;flex-shrink:0}
+.pr-empty{font-size:11px;color:#4a6080;text-align:center;padding:6px 0}
+.pr-doc{padding:7px 0;border-bottom:1px solid #1a2f4a}
+.pr-doc:last-child{border-bottom:none}
+.pr-doc-n{color:#fff;font-weight:600;font-size:12px}
+.pr-doc-s{color:#C0392B;font-size:10px;margin-top:2px}
 </style>
 </head>
 <body>
 
-<div class="toast" id="toast"></div>
+<div id="ov"></div>
 
-<!-- HOME -->
-<div class="scr on" id="s-home">
-  <div class="hh">
-    <div class="hl">sambandh.ai</div>
-    <div class="ht">Salon Research 📋</div>
-    <div class="hs">Jaipur Field Survey</div>
-  </div>
-
-  <div class="st">
-    <div class="si"><div class="sn" id="st-tot">0</div><div class="sl">Total</div></div>
-    <div class="si"><div class="sn" style="color:var(--g)" id="st-int">0</div><div class="sl">Interested</div></div>
-    <div class="si"><div class="sn" style="color:var(--y)" id="st-fu">0</div><div class="sl">Follow-up</div></div>
-    <div class="si"><div class="sn" style="color:var(--r)" id="st-not">0</div><div class="sl">Not Int.</div></div>
-  </div>
-
-  <!-- SIMPLE INSTALL BANNER -->
-  <div class="ib" id="ios-banner" onclick="showInstallModal()" style="display:none">
-    <div class="ib-t">📱 Add to Home Screen</div>
-    <span style="color:#fff;font-size:18px">→</span>
-  </div>
-
-  <button class="ab" onclick="go('s-add')">➕ Naya Salon Add Karo</button>
-
-  <div class="eb">
-    <button class="ebt eg" onclick="exportCSV()">📊 Google Sheets</button>
-    <button class="ebt em" onclick="showExportModal()">📤 Export / Share</button>
-  </div>
-
-  <div class="sw">
-    <span class="si2">🔍</span>
-    <input type="text" class="sinp" placeholder="Salon dhundo..." oninput="doSearch(this.value)">
-  </div>
-
-  <div class="fts">
-    <div class="ft on" onclick="doFilter('all',this)">Sab</div>
-    <div class="ft" onclick="doFilter('interested',this)">✅ Interested</div>
-    <div class="ft" onclick="doFilter('followup',this)">🔔 Follow-up</div>
-    <div class="ft" onclick="doFilter('not-interested',this)">❌ Not</div>
-    <div class="ft" onclick="doFilter('pending',this)">⏳ Pending</div>
-  </div>
-
-  <div class="ls" id="salon-list">
-    <div class="emp" id="empty-el">
-      <div class="ei">🏪</div>
-      <div class="et">Koi salon nahi abhi!</div>
-      <div class="es">Upar button dabao aur research shuru karo!</div>
+<!-- SCREEN 1 -->
+<div id="s1" class="screen">
+  <div class="logo">
+    <div class="logo-box">T</div>
+    <div>
+      <div class="logo-t">TrikMed</div>
+      <div class="logo-s">Voice Data Collection</div>
     </div>
   </div>
-</div>
-
-<!-- ADD -->
-<div class="scr" id="s-add">
-  <div class="tb">
-    <button class="tb-bk" onclick="go('s-home')">✕</button>
-    <div class="tb-ti">Naya Salon</div>
-    <button class="tb-ac" style="background:var(--o)" onclick="doSave()">Save</button>
-  </div>
-  <div class="fb">
-    <div class="fst">Salon Ki Jaankari</div>
-    <div class="ig"><label class="il">Salon Ka Naam *</label><input type="text" class="ifd" id="f-name" placeholder="Sharma Hair & Beauty"></div>
-    <div class="ig"><label class="il">Address / Area</label><input type="text" class="ifd" id="f-addr" placeholder="Vaishali Nagar, Jaipur"></div>
-    <div class="fst">Owner</div>
-    <div class="ig"><label class="il">Naam</label><input type="text" class="ifd" id="f-owner" placeholder="Rajesh Sharma"></div>
-    <div class="ig"><label class="il">Phone</label><input type="tel" class="ifd" id="f-phone" placeholder="98765 43210"></div>
-    <div class="fst">Daily Customers</div>
-    <div class="cs">
-      <button class="cbtn" onclick="chCnt(-10)">−−</button>
-      <button class="cbtn" onclick="chCnt(-1)">−</button>
-      <div><div class="cdisp" id="cnt-disp">20</div><div class="csub">per day</div></div>
-      <button class="cbtn" onclick="chCnt(1)">+</button>
-      <button class="cbtn" onclick="chCnt(10)">++</button>
+  <h2>Enter Your Details</h2>
+  <form id="reg-form">
+    <div class="field">
+      <div class="lbl">Full Name</div>
+      <input id="i-name" type="text" placeholder="Dr. Rahul Kumar"
+        autocomplete="name" autocapitalize="words" autocorrect="off">
     </div>
-    <div class="fst" style="margin-top:18px">Current Problems</div>
-    <div class="ig"><textarea class="ifd" id="f-prob" placeholder="Customers wapas nahi aate, no follow-up..."></textarea></div>
-    <div class="fst">Marketing Kaise Karte Hain?</div>
-    <div class="ig"><textarea class="ifd" id="f-mkt" placeholder="WhatsApp, Instagram, word of mouth..."></textarea></div>
-    <div class="fst">Status</div>
-    <div class="ss">
-      <div class="so" id="so-int" onclick="chStatus('interested')"><div class="soic">✅</div><div class="solb">Interested</div></div>
-      <div class="so" id="so-fu" onclick="chStatus('followup')"><div class="soic">🔔</div><div class="solb">Follow-up</div></div>
-      <div class="so" id="so-not" onclick="chStatus('not-interested')"><div class="soic">❌</div><div class="solb">Not</div></div>
+    <div class="field">
+      <div class="lbl">Phone Number</div>
+      <input id="i-phone" type="tel" placeholder="10-digit number"
+        maxlength="10" inputmode="numeric">
     </div>
-    <div class="fst" style="margin-top:18px">Follow-up Date</div>
-    <div class="ig"><input type="date" class="ifd" id="f-date"></div>
-    <div class="fst">Notes</div>
-    <div class="ig"><textarea class="ifd" id="f-notes" placeholder="Koi bhi important baat..."></textarea></div>
-    <div class="fst">Photo Khicho</div>
-    <div class="pu" onclick="document.getElementById('f-photo').click()">
-      <div class="pui">📸</div>
-      <div class="put">Tap karke photo lo (max 3)</div>
+    <div class="field">
+      <div class="lbl">Specialization</div>
+      <select id="i-spec">
+        <option value="">Select Specialization</option>
+        <option>General Medicine / MBBS</option>
+        <option>Pediatrics</option>
+        <option>Gynecology &amp; Obstetrics</option>
+        <option>Orthopedics</option>
+        <option>Cardiology</option>
+        <option>Dermatology</option>
+        <option>ENT</option>
+        <option>Ophthalmology</option>
+        <option>Dentistry</option>
+        <option>Neurology</option>
+        <option>Psychiatry</option>
+        <option>Urology</option>
+        <option>Nephrology</option>
+        <option>Gastroenterology</option>
+        <option>Pulmonology</option>
+        <option>Endocrinology</option>
+        <option>Oncology</option>
+        <option>Rheumatology</option>
+        <option>General Surgery</option>
+        <option>Other</option>
+      </select>
     </div>
-    <input type="file" id="f-photo" accept="image/*" multiple onchange="addPhotos(this)">
-    <div class="pp" id="photo-prev"></div>
-    <div class="fst" style="margin-top:18px">Video Links (Google Drive)</div>
-    <div class="vbox">
-      <div class="vbox-t">🎥 Google Drive Video Links</div>
-      <div class="vbox-s">Drive pe upload karo → Share link copy karo → Yahan paste karo</div>
-      <div class="vadd">
-        <input type="url" class="vinp" id="v-inp" placeholder="https://drive.google.com/...">
-        <button class="vbtn" onclick="addVideoLink()">Add</button>
+    <div class="tog-row">
+      <div>
+        <div class="tog-t">Recording with patient present?</div>
+        <div class="tog-s">Higher quality training data</div>
       </div>
-      <div class="vlist" id="v-list"></div>
+      <label class="sw">
+        <input type="checkbox" id="i-pat">
+        <span class="sw-tr"></span>
+        <span class="sw-th"></span>
+      </label>
     </div>
-  </div>
-  <div class="sb"><button class="sbb" onclick="doSave()">✓ Salon Save Karo</button></div>
+    <button type="submit" class="btn-p" id="btn-reg">
+      Start Recording Session →
+    </button>
+  </form>
 </div>
 
-<!-- DETAIL -->
-<div class="scr" id="s-detail">
-  <div class="tb">
-    <button class="tb-bk" onclick="go('s-home')">← Back</button>
-    <div class="tb-ti" id="det-title">Detail</div>
-    <button class="tb-ac" style="background:var(--r)" onclick="doDel()">Delete</button>
-  </div>
-  <div class="db" id="det-body"></div>
-</div>
-
-<!-- EXPORT MODAL -->
-<div class="mbg" id="exp-modal">
-  <div class="mod">
-    <div class="mod-ti">📤 Export Karo</div>
-    <button class="mbtn mb-g" onclick="exportCSV();closeModal('exp-modal')">📊 CSV (Google Sheets)</button>
-    <button class="mbtn mb-b" onclick="emailExport();closeModal('exp-modal')">📧 Email Pe Bhejo</button>
-    <button class="mbtn mb-wa" onclick="waExport();closeModal('exp-modal')">💬 WhatsApp Summary</button>
-    <button class="mbtn mb-c" onclick="closeModal('exp-modal')">Cancel</button>
-  </div>
-</div>
-
-<!-- INSTALL MODAL -->
-<div class="mbg" id="inst-modal">
-  <div class="mod">
-    <div class="mod-ti">📱 Add to Home Screen</div>
-    <div class="inst-step">
-      <div class="inst-title">🍎 iPhone:</div>
-      <div class="inst-text">Share ⬆️ → Add to Home Screen → Add</div>
+<!-- SCREEN 2 -->
+<div id="s2" class="screen">
+  <div class="topbar">
+    <div>
+      <div class="dr-name" id="d-name">—</div>
+      <div class="dr-id" id="d-id"></div>
     </div>
-    <div class="inst-step">
-      <div class="inst-title">🤖 Android:</div>
-      <div class="inst-text">3 dots ⋮ → Add to Home Screen → Add</div>
-    </div>
-    <button class="mbtn mb-c" onclick="closeModal('inst-modal')">OK</button>
+    <div class="clip-chip" id="c-clip">Clip <span id="n-clip">0</span></div>
   </div>
+  <div class="stats">
+    <div class="chip" id="c-saved">Saved: <span id="n-saved">0</span></div>
+    <div class="chip grn">Auto-save: ON ✓</div>
+    <div class="chip" id="c-today">Today: <span id="n-today">—</span></div>
+  </div>
+  <div class="tmpl">
+    <div class="tmpl-hdr">
+      <span class="tmpl-lbl">📋 Example Template #<span id="t-num">1</span></span>
+      <button class="btn-nxt" id="btn-nxt">Next →</button>
+    </div>
+    <div class="tmpl-txt" id="t-txt">Loading…</div>
+    <div class="tmpl-note">Speak naturally in your own words</div>
+  </div>
+  <div class="wf" id="wf"></div>
+  <div class="tmr" id="tmr">00:00</div>
+  <div class="rzone">
+    <div class="rwrap">
+      <div class="pulse" id="pulse"></div>
+      <button class="rbtn" id="rbtn"><span id="rico"></span></button>
+    </div>
+    <div class="rlbl" id="rlbl">Tap to Record</div>
+  </div>
+  <div class="sline" id="stat" style="color:#4a6080">Ready</div>
+  <div class="rid" id="rid">—</div>
+  <button class="btn-ch" id="btn-ch">Change User</button>
 </div>
 
 <script>
-var D=[];var cnt=20;var cSt='pending';var cFil='all';var cSrch='';var cId=null;var photos=[];var videos=[];
-var EMAIL='your@gmail.com';
-try{var sv=localStorage.getItem('sr_v3');if(sv)D=JSON.parse(sv)}catch(e){D=[]}
-function saveD(){try{localStorage.setItem('sr_v3',JSON.stringify(D))}catch(e){showToast('Storage full!')}}
-var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
-if(isIOS&&!window.navigator.standalone){document.getElementById('ios-banner').style.display='flex'}
-function go(id){document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on')});document.getElementById(id).classList.add('on');window.scrollTo(0,0);if(id==='s-home')render();if(id==='s-add')resetForm()}
-function chCnt(v){cnt=Math.max(0,cnt+v);document.getElementById('cnt-disp').textContent=cnt}
-function chStatus(s){cSt=s;['so-int','so-fu','so-not'].forEach(function(id){document.getElementById(id).className='so'});if(s==='interested')document.getElementById('so-int').className='so s-i';if(s==='followup')document.getElementById('so-fu').className='so s-f';if(s==='not-interested')document.getElementById('so-not').className='so s-n'}
-function addPhotos(input){var files=Array.from(input.files).slice(0,3-photos.length);files.forEach(function(f){if(f.size>3*1024*1024){showToast('Photo 3MB se kam honi chahiye!');return}var r=new FileReader();r.onload=function(e){photos.push(e.target.result);showPhotos()};r.onerror=function(){showToast('Photo load nahi hua')};r.readAsDataURL(f)});input.value=''}
-function showPhotos(){document.getElementById('photo-prev').innerHTML=photos.map(function(p,i){return'<img src="'+p+'" class="pt" onclick="removePhoto('+i+')">'}).join('')}
-function removePhoto(i){photos.splice(i,1);showPhotos()}
-function addVideoLink(){var inp=document.getElementById('v-inp');var url=inp.value.trim();if(!url){showToast('Link daalo!');return}if(!url.startsWith('http')){showToast('Valid link daalo');return}videos.push(url);inp.value='';showVideos();showToast('✅ Video add ho gaya!')}
-function showVideos(){var list=document.getElementById('v-list');if(!videos.length){list.innerHTML='';return}list.innerHTML=videos.map(function(v,i){var s=v.length>40?v.substring(0,40)+'...':v;return'<div class="vitem"><span class="vitem-ic">🎥</span><span class="vitem-tx">'+s+'</span><button class="vitem-del" onclick="removeVideo('+i+')">✕</button></div>'}).join('')}
-function removeVideo(i){videos.splice(i,1);showVideos()}
-function doSave(){var name=document.getElementById('f-name').value.trim();if(!name){showToast('Salon ka naam daalo!');return}var salon={id:Date.now(),name:name,addr:document.getElementById('f-addr').value,owner:document.getElementById('f-owner').value,phone:document.getElementById('f-phone').value,customers:cnt,problems:document.getElementById('f-prob').value,marketing:document.getElementById('f-mkt').value,status:cSt,followup:document.getElementById('f-date').value,notes:document.getElementById('f-notes').value,photos:photos.slice(),videos:videos.slice(),date:new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})};D.unshift(salon);saveD();showToast('✅ '+name+' save ho gaya!');go('s-home')}
-function resetForm(){['f-name','f-addr','f-owner','f-phone','f-prob','f-mkt','f-notes','f-date'].forEach(function(id){document.getElementById(id).value=''});cnt=20;document.getElementById('cnt-disp').textContent='20';cSt='pending';['so-int','so-fu','so-not'].forEach(function(id){document.getElementById(id).className='so'});photos=[];videos=[];document.getElementById('photo-prev').innerHTML='';document.getElementById('v-list').innerHTML='';document.getElementById('v-inp').value=''}
-function render(){updateStats();var list=document.getElementById('salon-list');list.querySelectorAll('.cd').forEach(function(c){c.remove()});var fil=D.filter(function(s){var mf=cFil==='all'||s.status===cFil;var q=cSrch.toLowerCase();var ms=!q||s.name.toLowerCase().indexOf(q)>-1||(s.owner&&s.owner.toLowerCase().indexOf(q)>-1)||(s.addr&&s.addr.toLowerCase().indexOf(q)>-1);return mf&&ms});var empty=document.getElementById('empty-el');empty.style.display=fil.length?'none':'flex';fil.forEach(function(s){var bc=s.status==='interested'?'bi':s.status==='not-interested'?'bnot':s.status==='followup'?'bfu':'bpd';var bt=s.status==='interested'?'✅ Interested':s.status==='not-interested'?'❌ Not':s.status==='followup'?'🔔 Follow-up':'⏳ Pending';var el=document.createElement('div');el.className='cd '+s.status;el.innerHTML='<div class="ct"><div><div class="cn">'+esc(s.name)+'</div><div class="co">'+esc(s.owner||'Owner naam nahi')+(s.addr?' · '+esc(s.addr):'')+'</div></div><span class="bg '+bc+'">'+bt+'</span></div><div class="ci"><div class="cii">👥 '+s.customers+'/day</div>'+(s.phone?'<div class="cii">📞 '+esc(s.phone)+'</div>':'')+'<div class="cii">📅 '+s.date+'</div>'+(s.videos&&s.videos.length?'<div class="cii">🎥 '+s.videos.length+'</div>':'')+'</div>'+(s.problems?'<div class="cp">💬 '+esc(s.problems)+'</div>':'')+'<div class="cf"><span class="cdt">'+(s.photos&&s.photos.length?'📸 '+s.photos.length:'')+'</span>'+(s.followup?'<span class="cfd">🔔 '+s.followup+'</span>':'')+'</div>';el.onclick=(function(id){return function(){showDet(id)}})(s.id);list.appendChild(el)})}
-function showDet(id){cId=id;var s=D.find(function(x){return x.id===id});if(!s)return;document.getElementById('det-title').textContent=s.name;var si=s.status==='interested'?'✅':s.status==='not-interested'?'❌':s.status==='followup'?'🔔':'⏳';var st=s.status==='interested'?'Interested':s.status==='not-interested'?'Not Interested':s.status==='followup'?'Follow-up':'Pending';var sc=s.status==='interested'?'color:var(--g)':s.status==='not-interested'?'color:var(--mu)':s.status==='followup'?'color:var(--y)':'color:var(--b)';var h='<div class="sbr '+s.status+'"><span style="font-size:22px">'+si+'</span><span style="font-size:15px;font-weight:700;'+sc+'">'+st+'</span>'+(s.followup?'<span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--y)">📅 '+s.followup+'</span>':'')+'</div>';h+='<div class="dc"><div class="dct">Salon Info</div><div class="dr"><span class="dk">Naam</span><span class="dv">'+esc(s.name)+'</span></div><div class="dr"><span class="dk">Address</span><span class="dv">'+esc(s.addr||'—')+'</span></div><div class="dr"><span class="dk">Daily Customers</span><span class="dv" style="color:var(--o)">'+s.customers+'/day</span></div><div class="dr"><span class="dk">Visit Date</span><span class="dv">'+s.date+'</span></div></div>';h+='<div class="dc"><div class="dct">Owner</div><div class="dr"><span class="dk">Naam</span><span class="dv">'+esc(s.owner||'—')+'</span></div><div class="dr"><span class="dk">Phone</span><span class="dv">'+esc(s.phone||'—')+'</span></div>';if(s.phone){h+='<a href="tel:'+s.phone.replace(/\D/g,'')+'" class="callbtn">📞 Call Karo</a><a href="https://wa.me/91'+s.phone.replace(/\D/g,'')+'" target="_blank" class="wabtn">💬 WhatsApp</a>'}h+='</div>';if(s.problems)h+='<div class="dc"><div class="dct">Problems</div><div style="font-size:14px;line-height:1.6">'+esc(s.problems)+'</div></div>';if(s.marketing)h+='<div class="dc"><div class="dct">Marketing</div><div style="font-size:14px;line-height:1.6">'+esc(s.marketing)+'</div></div>';if(s.notes)h+='<div class="dc"><div class="dct">Notes</div><div style="font-size:14px;line-height:1.6">'+esc(s.notes)+'</div></div>';if(s.videos&&s.videos.length){h+='<div class="dc"><div class="dct">Videos ('+s.videos.length+')</div>';s.videos.forEach(function(v,i){h+='<a href="'+v+'" target="_blank" class="vlink"><span style="font-size:18px">🎥</span><span class="vlink-tx">Video '+(i+1)+'</span><span style="font-size:13px;color:var(--b);margin-left:auto">Open →</span></a>'});h+='</div>'}if(s.photos&&s.photos.length){h+='<div class="dc"><div class="dct">Photos ('+s.photos.length+')</div><div class="pg">';s.photos.forEach(function(p){h+='<img src="'+p+'" onclick="window.open(this.src)">'});h+='</div></div>'}h+='<button class="delbtn" onclick="doDel()">🗑️ Delete Karo</button>';document.getElementById('det-body').innerHTML=h;go('s-detail')}
-function doDel(){if(confirm('Delete karna chahte ho?')){D=D.filter(function(s){return s.id!==cId});saveD();go('s-home')}}
-function doFilter(f,el){cFil=f;document.querySelectorAll('.ft').forEach(function(t){t.classList.remove('on')});el.classList.add('on');render()}
-function doSearch(v){cSrch=v;render()}
-function updateStats(){document.getElementById('st-tot').textContent=D.length;document.getElementById('st-int').textContent=D.filter(function(s){return s.status==='interested'}).length;document.getElementById('st-fu').textContent=D.filter(function(s){return s.status==='followup'}).length;document.getElementById('st-not').textContent=D.filter(function(s){return s.status==='not-interested'}).length}
-function exportCSV(){if(!D.length){showToast('Koi data nahi!');return}var h=['Salon Naam','Address','Owner','Phone','Daily Customers','Status','Problems','Marketing','Follow-up Date','Notes','Videos','Visit Date'];var rows=D.map(function(s){return['"'+(s.name||'').replace(/"/g,'""')+'"','"'+(s.addr||'').replace(/"/g,'""')+'"','"'+(s.owner||'').replace(/"/g,'""')+'"','"'+(s.phone||'').replace(/"/g,'""')+'"',s.customers,'"'+(s.status||'')+'"','"'+(s.problems||'').replace(/"/g,'""').replace(/\n/g,' ')+'"','"'+(s.marketing||'').replace(/"/g,'""').replace(/\n/g,' ')+'"','"'+(s.followup||'')+'"','"'+(s.notes||'').replace(/"/g,'""').replace(/\n/g,' ')+'"','"'+((s.videos||[]).join(' | '))+'"','"'+(s.date||'')+'"'].join(',')});var csv='\uFEFF'+h.join(',')+'\n'+rows.join('\n');var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='salon_research_'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url)},1000);showToast('✅ CSV download ho gayi!')}
-function emailExport(){if(!D.length){showToast('Koi data nahi!');return}var body='Salon Research — Jaipur\nDate: '+new Date().toLocaleDateString('en-IN')+'\n\nTotal: '+D.length+' | Interested: '+D.filter(function(s){return s.status==='interested'}).length+' | Follow-up: '+D.filter(function(s){return s.status==='followup'}).length+'\n\n---\n\n';D.forEach(function(s,i){body+=(i+1)+'. '+s.name+'\n';if(s.addr)body+='   📍 '+s.addr+'\n';body+='   👤 '+(s.owner||'—')+' | 📞 '+(s.phone||'—')+'\n';body+='   👥 '+s.customers+'/day | '+s.status+'\n';if(s.problems)body+='   ⚠️ '+s.problems+'\n';if(s.followup)body+='   🔔 '+s.followup+'\n';if(s.videos&&s.videos.length)body+='   🎥 '+s.videos.join(', ')+'\n';body+='\n'});window.location.href='mailto:'+EMAIL+'?subject='+encodeURIComponent('Salon Research '+new Date().toLocaleDateString('en-IN'))+'&body='+encodeURIComponent(body)}
-function waExport(){if(!D.length){showToast('Koi data nahi!');return}var msg='*Salon Research — Jaipur* 📋\n'+new Date().toLocaleDateString('en-IN')+'\n\nTotal: '+D.length+' | ✅ '+D.filter(function(s){return s.status==='interested'}).length+' | 🔔 '+D.filter(function(s){return s.status==='followup'}).length+' | ❌ '+D.filter(function(s){return s.status==='not-interested'}).length+'\n\n';var intD=D.filter(function(s){return s.status==='interested'});if(intD.length){msg+='*✅ Interested:*\n';intD.forEach(function(s){msg+='• '+s.name+(s.addr?' ('+s.addr+')':'')+(s.phone?' — '+s.phone:'')+'\n'})}window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank')}
-function showExportModal(){document.getElementById('exp-modal').classList.add('on')}
-function showInstallModal(){document.getElementById('inst-modal').classList.add('on')}
-function closeModal(id){document.getElementById(id).classList.remove('on')}
-document.getElementById('exp-modal').addEventListener('click',function(e){if(e.target===this)closeModal('exp-modal')});
-document.getElementById('inst-modal').addEventListener('click',function(e){if(e.target===this)closeModal('inst-modal')});
-function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');setTimeout(function(){t.classList.remove('on')},2500)}
-function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-render();
+const MIC='<svg viewBox="0 0 24 24" fill="white" width="28" height="28"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>';
+const SQ='<div style="width:24px;height:24px;background:white;border-radius:4px"></div>';
+
+(()=>{
+  const wf=document.getElementById('wf');
+  for(let i=0;i<20;i++){
+    const b=document.createElement('div');
+    b.className='bar';b.dataset.i=i%5;
+    wf.appendChild(b);
+  }
+  document.getElementById('rico').innerHTML=MIC;
+})();
+
+const T=[];
+let tIdx=0,sCount=0,secs=0,tid=null,chunks=[],mr=null,recOn=false,cid='';
+const saved=[];
+
+async function loadT(){
+  try{
+    const d=await fetch('/api/templates').then(r=>r.json());
+    T.push(...d);nextT();
+  }catch(e){}
+}
+function nextT(){
+  if(!T.length)return;
+  tIdx=Math.floor(Math.random()*T.length);
+  document.getElementById('t-txt').textContent=T[tIdx].text;
+  document.getElementById('t-num').textContent=tIdx+1;
+}
+function mkId(){
+  const u=JSON.parse(localStorage.getItem('tmu')||'{}');
+  return (u.doctor_id||'DR-000000')+'-'+Date.now();
+}
+
+function ui(s){
+  const rb=document.getElementById('rbtn');
+  const st=document.getElementById('stat');
+  const tm=document.getElementById('tmr');
+  const lb=document.getElementById('rlbl');
+  const pu=document.getElementById('pulse');
+  const ic=document.getElementById('rico');
+  const bars=document.querySelectorAll('.bar');
+  if(!rb||!st||!tm)return;
+  if(s==='idle'){
+    if(ic)ic.innerHTML=MIC;
+    rb.disabled=false;rb.style.cssText='';
+    if(lb)lb.textContent='Tap to Record';
+    st.textContent='Ready';st.style.color='#4a6080';
+    tm.style.color='#fff';
+    if(pu)pu.classList.remove('on');
+    bars.forEach(b=>{b.style.animation='none';b.style.height='8px';b.style.background='#1e3a5f';});
+  }else if(s==='rec'){
+    if(ic)ic.innerHTML=SQ;
+    rb.disabled=false;rb.style.cssText='';
+    if(lb)lb.textContent='Tap to Stop';
+    st.textContent='● Recording...';st.style.color='#C0392B';
+    tm.style.color='#C0392B';
+    if(pu)pu.classList.add('on');
+    bars.forEach((b,i)=>{
+      b.style.background='#C0392B';
+      b.style.animation='w'+b.dataset.i+' 0.'+(5+i%4)+'s ease-in-out infinite alternate';
+    });
+  }else if(s==='saving'){
+    rb.disabled=true;rb.style.opacity='.5';rb.style.pointerEvents='none';
+    if(lb)lb.textContent='';
+    st.textContent='↑ Saving...';st.style.color='#f39c12';
+    if(pu)pu.classList.remove('on');
+    bars.forEach(b=>{b.style.animation='none';b.style.height='8px';b.style.background='#1e3a5f';});
+  }else if(s==='saved'){
+    st.textContent='✓ Saved!';st.style.color='#27ae60';
+  }
+}
+
+async function toggle(){
+  if(!recOn){
+    if(!navigator.mediaDevices||!window.MediaRecorder){alert('Use Chrome');return;}
+    try{
+      const stream=await navigator.mediaDevices.getUserMedia(
+        {audio:{echoCancellation:true,noiseSuppression:true,sampleRate:16000}});
+      chunks=[];cid=mkId();
+      document.getElementById('rid').textContent=cid;
+      const mime=MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ?'audio/webm;codecs=opus':'audio/webm';
+      mr=new MediaRecorder(stream,{mimeType:mime});
+      mr.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
+      mr.onstop=()=>{
+        stream.getTracks().forEach(t=>t.stop());
+        upload(new Blob(chunks,{type:mime}));
+      };
+      mr.onerror=()=>ui('idle');
+      mr.start();recOn=true;secs=0;
+      tid=setInterval(()=>{
+        secs++;
+        const m=String(Math.floor(secs/60)).padStart(2,'0');
+        const s=String(secs%60).padStart(2,'0');
+        document.getElementById('tmr').textContent=m+':'+s;
+      },1000);
+      ui('rec');
+    }catch(e){
+      alert(e.name==='NotAllowedError'?'Allow microphone in Settings':'Microphone not found');
+      ui('idle');
+    }
+  }else{
+    recOn=false;clearInterval(tid);ui('saving');mr.stop();
+  }
+}
+
+async function upload(blob){
+  const u=JSON.parse(localStorage.getItem('tmu')||'{}');
+  const form=new FormData();
+  form.append('audio',blob,cid+'.webm');
+  form.append('student_name',u.name||'');
+  form.append('student_phone',u.phone||'');
+  form.append('doctor_id',u.doctor_id||'');
+  form.append('specialization',u.specialization||'');
+  form.append('template_id',tIdx);
+  form.append('template_text',T[tIdx]?.text||'');
+  form.append('duration_sec',secs);
+  form.append('patient_mode',u.patient_mode?1:0);
+
+  setTimeout(()=>{
+    sCount++;
+    document.getElementById('n-clip').textContent=sCount;
+    document.getElementById('n-saved').textContent=sCount;
+    saved.push({id:cid,dur:secs});
+    ui('saved');
+    setTimeout(()=>{
+      chunks=[];recOn=false;secs=0;
+      document.getElementById('tmr').textContent='00:00';
+      const rb=document.getElementById('rbtn');
+      rb.disabled=false;rb.style.cssText='';
+      nextT();cid=mkId();
+      document.getElementById('rid').textContent=cid;
+      ui('idle');getStats();
+    },1200);
+  },400);
+
+  try{
+    const ac=new AbortController();
+    setTimeout(()=>ac.abort(),15000);
+    await fetch('/api/upload',{method:'POST',body:form,signal:ac.signal});
+  }catch(e){
+    const q=JSON.parse(localStorage.getItem('rq')||'[]');
+    q.push({id:cid,ts:Date.now()});
+    localStorage.setItem('rq',JSON.stringify(q));
+  }
+}
+
+async function getStats(){
+  try{
+    const d=await fetch('/api/stats').then(r=>r.json());
+    const el=document.getElementById('n-today');
+    if(el)el.textContent=d.today_recordings??0;
+  }catch(e){}
+}
+
+function openPanel(anchor,html){
+  const ov=document.getElementById('ov');
+  ov.innerHTML='';
+  const r=anchor.getBoundingClientRect();
+  const p=document.createElement('div');
+  p.className='pop';
+  let left=r.left;
+  if(left+260>window.innerWidth)left=window.innerWidth-264;
+  p.style.top=(r.bottom+6)+'px';
+  p.style.left=left+'px';
+  p.innerHTML=html;
+  ov.appendChild(p);
+  const close=e=>{
+    if(!p.contains(e.target)&&e.target!==anchor){
+      ov.innerHTML='';
+      document.removeEventListener('pointerdown',close);
+    }
+  };
+  setTimeout(()=>document.addEventListener('pointerdown',close),100);
+}
+
+function savedHtml(){
+  if(!saved.length)
+    return '<div class="pr-empty">No recordings this session yet</div>';
+  return [...saved].reverse().map(r=>
+    '<div class="pr">'+
+    '<span class="pr-id">'+r.id+'</span>'+
+    '<span class="pr-dur">'+r.dur+'s</span>'+
+    '<button class="pr-play" onclick="play(\''+r.id+'\')">&#9654; Play</button>'+
+    '</div>').join('');
+}
+
+function play(id){
+  new Audio('/api/audio/'+id).play().catch(e=>alert('Cannot play: '+e.message));
+}
+
+document.getElementById('c-saved').addEventListener('click',e=>{
+  e.stopPropagation();openPanel(e.currentTarget,savedHtml());
+});
+document.getElementById('c-clip').addEventListener('click',e=>{
+  e.stopPropagation();openPanel(e.currentTarget,savedHtml());
+});
+document.getElementById('c-today').addEventListener('click',async e=>{
+  e.stopPropagation();
+  openPanel(e.currentTarget,'<div class="pr-empty">Loading…</div>');
+  try{
+    const d=await fetch('/api/stats').then(r=>r.json());
+    const ov=document.getElementById('ov');
+    const p=ov.querySelector('.pop');
+    if(!p)return;
+    const docs=d.today_doctors||[];
+    p.innerHTML=docs.length
+      ?docs.map(x=>'<div class="pr-doc"><div class="pr-doc-n">'+x.doctor_name+'</div><div class="pr-doc-s">'+x.doctor_id+' \xb7 '+x.clips_today+' clips</div></div>').join('')
+      :'<div class="pr-empty">No recordings today yet</div>';
+  }catch(err){
+    const p=document.getElementById('ov').querySelector('.pop');
+    if(p)p.innerHTML='<div class="pr-empty">Could not load</div>';
+  }
+});
+
+document.getElementById('rbtn').addEventListener('click',toggle);
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'&&document.getElementById('s2').classList.contains('active')){
+    e.preventDefault();toggle();
+  }
+});
+document.getElementById('btn-nxt').addEventListener('click',()=>{if(!recOn)nextT();});
+
+document.getElementById('reg-form').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const name=document.getElementById('i-name').value.trim();
+  const phone=document.getElementById('i-phone').value.trim();
+  const spec=document.getElementById('i-spec').value;
+  const pat=document.getElementById('i-pat').checked;
+  if(!name||!phone){alert('Name and phone required');return;}
+  const btn=document.getElementById('btn-reg');
+  btn.disabled=true;btn.textContent='Loading…';
+  try{
+    const d=await fetch('/api/register',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name,phone,specialization:spec,patient_mode:pat})
+    }).then(r=>r.json());
+    d.patient_mode=pat?1:0;
+    d.doctor_id='DR-'+phone.slice(-6);
+    localStorage.setItem('tmu',JSON.stringify(d));
+    go2(d);
+  }catch(err){
+    alert('Cannot connect to server');
+    btn.disabled=false;btn.textContent='Start Recording Session →';
+  }
+});
+
+document.getElementById('btn-ch').addEventListener('click',()=>{
+  if(recOn){recOn=false;clearInterval(tid);
+    if(mr&&mr.state!=='inactive')mr.stop();}
+  localStorage.removeItem('tmu');
+  sCount=0;T.length=0;saved.length=0;
+  ui('idle');
+  document.getElementById('tmr').textContent='00:00';
+  document.getElementById('rid').textContent='—';
+  document.getElementById('n-clip').textContent='0';
+  document.getElementById('n-saved').textContent='0';
+  const b=document.getElementById('btn-reg');
+  b.disabled=false;b.textContent='Start Recording Session →';
+  show('s1');
+});
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function go2(u){
+  document.getElementById('d-name').textContent=u.name||'—';
+  document.getElementById('d-id').textContent=u.doctor_id||'';
+  document.getElementById('n-saved').textContent=u.total_recordings||0;
+  show('s2');loadT();getStats();
+}
+
+const _u=localStorage.getItem('tmu');
+if(_u){
+  try{
+    const u=JSON.parse(_u);
+    if(!u.doctor_id&&u.phone)u.doctor_id='DR-'+u.phone.slice(-6);
+    localStorage.setItem('tmu',JSON.stringify(u));
+    go2(u);
+  }catch(e){localStorage.removeItem('tmu');show('s1');}
+}else{show('s1');}
 </script>
 </body>
 </html>
