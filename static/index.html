@@ -1,882 +1,319 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>TrikMed — Voice Data Collection</title>
-
-  <!-- PWA -->
-  <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#C0392B">
-  <meta name="mobile-web-app-capable" content="yes">
-
-  <!-- iOS / Safari PWA -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="TrikMed">
-  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
-  <style>
-    /* ── CRITICAL: no page movement ─────────────────────────────── */
-    html, body {
-      overflow: hidden;
-      position: fixed;
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #0F1F3D;
-      color: white;
-    }
-    .screen {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding: 24px 20px 40px;
-      display: none;
-    }
-    .screen.active { display: block; }
-    * { box-sizing: border-box; max-width: 100%; }
-
-    /* ── Logo ────────────────────────────────────────────────────── */
-    .logo-row {
-      display: flex; align-items: center;
-      gap: 12px; margin-bottom: 28px;
-    }
-    .logo-icon {
-      width: 46px; height: 46px; flex-shrink: 0;
-      background: #C0392B; border-radius: 10px;
-      font-size: 26px; font-weight: 900;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .logo-name { font-size: 17px; font-weight: 800; letter-spacing: -0.3px; }
-    .logo-sub  { font-size: 12px; color: #4a6080; margin-top: 2px; }
-
-    /* ── Register heading ───────────────────────────────────────── */
-    #screen-register h2 {
-      font-size: 22px; font-weight: 700;
-      margin: 0 0 22px; color: white;
-    }
-
-    /* ── Form fields ─────────────────────────────────────────────── */
-    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
-    .field-label {
-      font-size: 11px; font-weight: 700;
-      color: #4a6080; text-transform: uppercase; letter-spacing: 0.08em;
-    }
-    input[type=text], input[type=tel], select {
-      width: 100%; padding: 14px;
-      background: #152843;
-      border: 1.5px solid #1e3a5f;
-      border-radius: 12px;
-      color: white; font-size: 16px;
-      outline: none;
-      -webkit-appearance: none; appearance: none;
-    }
-    input::placeholder { color: #4a6080; }
-    input:focus, select:focus { border-color: #C0392B; }
-    select {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%234a6080' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: right 14px center; padding-right: 38px;
-    }
-    select option { background: #152843; }
-
-    /* ── Toggle ──────────────────────────────────────────────────── */
-    .toggle-row {
-      display: flex; align-items: center;
-      justify-content: space-between; gap: 14px;
-      padding: 14px;
-      background: #152843; border: 1.5px solid #1e3a5f; border-radius: 12px;
-      margin-bottom: 22px;
-    }
-    .t-title { font-size: 14px; font-weight: 600; color: white; }
-    .t-sub   { font-size: 11px; color: #4a6080; margin-top: 3px; }
-    .sw { position: relative; width: 48px; height: 26px; flex-shrink: 0; cursor: pointer; }
-    .sw input { opacity: 0; position: absolute; width: 0; height: 0; }
-    .sw-track {
-      position: absolute; inset: 0;
-      background: #1e3a5f; border-radius: 26px; transition: background 0.2s;
-    }
-    .sw-thumb {
-      position: absolute; width: 20px; height: 20px;
-      top: 3px; left: 3px;
-      background: white; border-radius: 50%;
-      transition: transform 0.2s; pointer-events: none;
-    }
-    .sw input:checked ~ .sw-track { background: #C0392B; }
-    .sw input:checked ~ .sw-thumb { transform: translateX(22px); }
-
-    /* ── Buttons ─────────────────────────────────────────────────── */
-    .btn-primary {
-      width: 100%; padding: 16px;
-      background: #C0392B; color: white;
-      border: none; border-radius: 12px;
-      font-size: 16px; font-weight: bold;
-      cursor: pointer; -webkit-tap-highlight-color: transparent;
-    }
-    .btn-primary:active  { opacity: 0.84; }
-    .btn-primary:disabled { opacity: 0.48; pointer-events: none; }
-
-    /* ── Record screen: top bar ──────────────────────────────────── */
-    .top-bar {
-      display: flex; align-items: center;
-      justify-content: space-between; gap: 10px;
-      margin-bottom: 14px;
-    }
-    .top-name { font-size: 16px; font-weight: 700; color: white; flex: 1; min-width: 0;
-                white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .clip-badge {
-      background: #C0392B; color: white;
-      font-size: 12px; font-weight: 700;
-      padding: 4px 12px; border-radius: 99px; flex-shrink: 0;
-    }
-
-    /* ── Stats chips ─────────────────────────────────────────────── */
-    .stats-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
-    .chip-wrap { position: relative; }
-    .stat-chip {
-      padding: 5px 12px;
-      background: #152843; border: 1px solid #1e3a5f;
-      border-radius: 99px; font-size: 12px; font-weight: 600;
-      cursor: pointer; user-select: none; -webkit-user-select: none;
-    }
-    .stat-chip.green {
-      color: #22c55e; border-color: rgba(34,197,94,0.35);
-      cursor: default;
-    }
-    .stat-chip.active { border-color: #C0392B; }
-
-    /* ── Dropdown panels ─────────────────────────────────────────── */
-    .stat-panel {
-      display: none;
-      position: absolute;
-      top: calc(100% + 6px); left: 0;
-      min-width: 260px;
-      background: #0F1F3D;
-      border: 1px solid #C0392B;
-      border-radius: 12px;
-      padding: 12px;
-      max-height: 200px;
-      overflow-y: auto;
-      z-index: 100;
-    }
-    .stat-panel.right { left: auto; right: 0; }
-    .stat-panel.open  { display: block; }
-    .panel-row {
-      display: flex; align-items: center; gap: 8px;
-      padding: 7px 0; border-bottom: 1px solid #1a2f4a;
-      font-size: 12px;
-    }
-    .panel-row:last-child { border-bottom: none; }
-    .panel-rec-id {
-      flex: 1; overflow: hidden; text-overflow: ellipsis;
-      white-space: nowrap; color: #94a3b8; font-size: 11px;
-    }
-    .panel-dur { color: #4a6080; flex-shrink: 0; font-family: monospace; }
-    .panel-empty { font-size: 12px; color: #4a6080; text-align: center; padding: 8px 0; }
-    .play-btn {
-      flex-shrink: 0; margin-left: 4px;
-      background: #C0392B; border: none; color: white;
-      border-radius: 6px; padding: 3px 8px;
-      font-size: 11px; font-weight: 600; cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .play-btn:active { opacity: 0.75; }
-
-    /* ── Template card ───────────────────────────────────────────── */
-    .tmpl-card {
-      background: #152843;
-      border-left: 3px solid #C0392B;
-      border-radius: 12px; padding: 16px;
-      margin-bottom: 16px;
-    }
-    .tmpl-header {
-      display: flex; align-items: center;
-      justify-content: space-between; gap: 8px;
-      margin-bottom: 10px;
-    }
-    .tmpl-label-text {
-      font-size: 11px; font-weight: 600; color: #4a6080;
-      text-transform: uppercase; letter-spacing: 0.07em;
-    }
-    .btn-next {
-      background: transparent; border: none;
-      color: #4a6080; font-size: 13px; font-weight: 600;
-      cursor: pointer; padding: 2px 4px; flex-shrink: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .btn-next:active { color: #94a3b8; }
-    .tmpl-text { font-size: 15px; line-height: 1.7; color: white; }
-    .tmpl-note {
-      font-size: 11px; color: #4a6080; margin-top: 10px;
-      line-height: 1.5; font-style: italic;
-    }
-
-    /* ── Waveform ────────────────────────────────────────────────── */
-    .waveform {
-      display: flex; align-items: center; justify-content: center;
-      gap: 3px; height: 48px; margin-bottom: 4px;
-    }
-    .wave-bar {
-      width: 3px; height: 8px;
-      background: #1e3a5f; border-radius: 2px;
-    }
-
-    /* ── Timer ───────────────────────────────────────────────────── */
-    .timer {
-      font-size: 48px; font-family: 'Courier New', monospace;
-      font-variant-numeric: tabular-nums;
-      letter-spacing: -2px; text-align: center;
-      color: white; line-height: 1; margin-bottom: 18px;
-    }
-
-    /* ── Record button ───────────────────────────────────────────── */
-    .rec-zone {
-      display: flex; flex-direction: column;
-      align-items: center; gap: 10px; margin-bottom: 14px;
-    }
-    .rec-wrap { position: relative; width: 80px; height: 80px; }
-    .pulse-ring {
-      position: absolute; inset: -9px; border-radius: 50%;
-      border: 3px solid #C0392B; opacity: 0; pointer-events: none;
-    }
-    .pulse-ring.on { animation: pulse-ring 1.15s ease-out infinite; }
-    @keyframes pulse-ring {
-      0%   { transform: scale(1);    opacity: 0.75; }
-      100% { transform: scale(1.65); opacity: 0; }
-    }
-    .rec-btn {
-      position: relative; z-index: 1;
-      width: 80px; height: 80px; border-radius: 50%;
-      background: #C0392B; border: none;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; -webkit-tap-highlight-color: transparent;
-    }
-    .rec-btn:disabled { opacity: 0.5; pointer-events: none; }
-    .rec-btn-label { font-size: 12px; font-weight: 600; color: #4a6080; }
-
-    /* ── Status ──────────────────────────────────────────────────── */
-    .status-line {
-      text-align: center; font-size: 14px; font-weight: 600;
-      margin-bottom: 8px; min-height: 20px;
-    }
-
-    /* ── Recording ID ────────────────────────────────────────────── */
-    .rec-id {
-      text-align: center; font-family: 'Courier New', monospace;
-      font-size: 11px; color: #2a3f5f;
-      letter-spacing: 0.04em; margin-bottom: 14px; min-height: 16px;
-    }
-
-    /* ── Change user ─────────────────────────────────────────────── */
-    .btn-change {
-      display: block; width: 100%; text-align: center;
-      background: none; border: none; color: #2a3f5f;
-      font-size: 12px; cursor: pointer; padding: 8px;
-      text-decoration: underline; -webkit-tap-highlight-color: transparent;
-    }
-
-    /* ── Toast ───────────────────────────────────────────────────── */
-    .toast {
-      position: fixed; bottom: 20px; left: 16px; right: 16px; z-index: 999;
-      background: #0a1628; border: 1px solid rgba(192,57,43,0.4);
-      color: #fca5a5; padding: 12px 16px; border-radius: 10px;
-      font-size: 13px; text-align: center;
-      opacity: 0; pointer-events: none; transition: opacity 0.25s;
-    }
-    .toast.show { opacity: 1; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Salon Research">
+<meta name="theme-color" content="#FF5C00">
+<title>Salon Research</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--o:#FF5C00;--ol:#FFF0E8;--g:#00C97A;--gl:#E8FFF4;--r:#FF4545;--rl:#FFF0F0;--b:#3B82F6;--bl:#EFF6FF;--y:#F59E0B;--yl:#FFFBEB;--bg:#F8F9FA;--w:#fff;--tx:#1A1A2E;--mu:#9CA3AF;--br:#E5E7EB}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;max-width:430px;margin:0 auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.scr{display:none;min-height:100vh;flex-direction:column}
+.scr.on{display:flex}
+.tb{background:var(--w);padding:54px 20px 14px;border-bottom:1px solid var(--br);display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
+.tb-bk{width:36px;height:36px;background:var(--bg);border:none;border-radius:10px;cursor:pointer;font-size:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.tb-ti{font-size:17px;font-weight:700;flex:1}
+.tb-ac{color:#fff;border:none;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.hh{background:var(--w);padding:56px 20px 18px;border-bottom:1px solid var(--br)}
+.ht{font-size:24px;font-weight:700}
+.hs{font-size:13px;color:var(--mu);margin-top:3px}
+.st{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:12px 20px;background:var(--w);border-bottom:1px solid var(--br)}
+.si{text-align:center}
+.sn{font-size:18px;font-weight:700;color:var(--o)}
+.sl{font-size:10px;color:var(--mu);margin-top:1px}
+.ab{margin:14px 20px;background:var(--o);color:#fff;border:none;width:calc(100% - 40px);padding:15px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 16px rgba(255,92,0,.3)}
+.ab:active{opacity:.9}
+.eb{display:flex;gap:8px;padding:0 20px 12px}
+.ebt{flex:1;padding:10px 6px;border-radius:10px;font-size:12px;font-weight:700;border:1.5px solid;background:var(--w);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px}
+.ebt:active{opacity:.8}
+.eg{border-color:var(--g);color:var(--g);background:var(--gl)}
+.em{border-color:var(--b);color:var(--b);background:var(--bl)}
+/* INSTALL BANNER — Simple */
+.ib{margin:0 20px 10px;background:var(--o);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;cursor:pointer}
+.ib-t{font-size:14px;font-weight:700;color:#fff;flex:1}
+.sw{padding:0 20px 10px;position:relative}
+.si2{position:absolute;left:34px;top:50%;transform:translateY(-50%);color:var(--mu);font-size:15px;pointer-events:none}
+.sinp{width:100%;padding:11px 14px 11px 38px;border:1.5px solid var(--br);border-radius:12px;font-size:15px;background:var(--w);font-family:inherit}
+.sinp:focus{outline:none;border-color:var(--o)}
+.fts{display:flex;gap:8px;padding:0 20px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.fts::-webkit-scrollbar{display:none}
+.ft{padding:6px 14px;border-radius:100px;font-size:12px;font-weight:600;border:1.5px solid var(--br);background:var(--w);color:var(--mu);cursor:pointer;white-space:nowrap}
+.ft.on{background:var(--o);border-color:var(--o);color:#fff}
+.ls{padding:0 20px 100px;display:flex;flex-direction:column;gap:10px}
+.cd{background:var(--w);border-radius:14px;padding:14px;box-shadow:0 2px 12px rgba(0,0,0,.08);cursor:pointer;border:1.5px solid transparent}
+.cd:active{opacity:.9}
+.cd.interested{border-color:var(--g)}.cd.not-interested{border-color:var(--br);opacity:.7}.cd.followup{border-color:var(--y)}
+.ct{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+.cn{font-size:15px;font-weight:700}.co{font-size:12px;color:var(--mu);margin-top:2px}
+.bg{padding:3px 9px;border-radius:100px;font-size:10px;font-weight:700;flex-shrink:0;margin-left:6px}
+.bi{background:var(--gl);color:var(--g)}.bnot{background:var(--br);color:var(--mu)}.bfu{background:var(--yl);color:var(--y)}.bpd{background:var(--bl);color:var(--b)}
+.ci{display:flex;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.cii{font-size:11px;color:var(--mu)}
+.cp{background:var(--bg);border-radius:8px;padding:7px 10px;font-size:12px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cf{display:flex;justify-content:space-between;margin-top:8px}
+.cdt{font-size:11px;color:var(--mu)}.cfd{font-size:11px;font-weight:600;color:var(--y)}
+.emp{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center}
+.ei{font-size:52px;margin-bottom:14px}.et{font-size:17px;font-weight:700;margin-bottom:6px}.es{font-size:13px;color:var(--mu);line-height:1.6}
+.fb{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 20px 130px}
+.fst{font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin:18px 0 9px}
+.fst:first-child{margin-top:0}
+.ig{margin-bottom:11px}
+.il{font-size:13px;font-weight:600;margin-bottom:5px;display:block}
+.ifd{width:100%;padding:12px 14px;border:1.5px solid var(--br);border-radius:12px;font-size:15px;background:var(--w);color:var(--tx);font-family:inherit;-webkit-appearance:none}
+.ifd:focus{outline:none;border-color:var(--o)}
+textarea.ifd{resize:none;min-height:75px;line-height:1.5}
+.cs{display:flex;align-items:center;gap:10px}
+.cbtn{width:42px;height:42px;border-radius:12px;border:2px solid var(--br);background:var(--w);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;font-weight:600}
+.cbtn:active{background:var(--ol);border-color:var(--o)}
+.cdisp{font-size:26px;font-weight:700;color:var(--o);min-width:55px;text-align:center}
+.csub{font-size:11px;color:var(--mu);text-align:center}
+.ss{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.so{padding:11px 6px;border-radius:12px;border:2px solid var(--br);text-align:center;cursor:pointer}
+.so:active{opacity:.9}
+.soic{font-size:19px;margin-bottom:3px}.solb{font-size:11px;font-weight:600;color:var(--mu)}
+.s-i{border-color:var(--g);background:var(--gl)}.s-i .solb{color:var(--g)}
+.s-f{border-color:var(--y);background:var(--yl)}.s-f .solb{color:var(--y)}
+.s-n{border-color:var(--r);background:var(--rl)}.s-n .solb{color:var(--r)}
+.pu{border:2px dashed var(--br);border-radius:12px;padding:16px;text-align:center;cursor:pointer;background:var(--w)}
+.pu:active{border-color:var(--o)}
+.pui{font-size:24px;margin-bottom:4px}.put{font-size:13px;color:var(--mu);font-weight:500}
+.pp{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pt{width:70px;height:70px;border-radius:10px;object-fit:cover;border:2px solid var(--br)}
+input[type=file]{display:none}
+.vbox{background:var(--bl);border:1.5px solid var(--b);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.vbox-t{font-size:12px;font-weight:700;color:var(--b);margin-bottom:6px}
+.vbox-s{font-size:11px;color:var(--mu);margin-bottom:8px;line-height:1.5}
+.vadd{display:flex;gap:8px}
+.vinp{flex:1;padding:10px 12px;border:1.5px solid var(--br);border-radius:10px;font-size:13px;background:var(--w);font-family:inherit}
+.vinp:focus{outline:none;border-color:var(--b)}
+.vbtn{background:var(--b);color:#fff;border:none;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+.vbtn:active{opacity:.8}
+.vlist{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.vitem{background:var(--w);border:1px solid var(--br);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px}
+.vitem-ic{font-size:16px;flex-shrink:0}
+.vitem-tx{flex:1;font-size:12px;font-weight:600;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vitem-del{background:none;border:none;color:var(--mu);font-size:14px;cursor:pointer;padding:4px;flex-shrink:0}
+.sb{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;padding:12px 20px 32px;background:var(--w);border-top:1px solid var(--br);z-index:100}
+.sbb{background:var(--o);color:#fff;border:none;width:100%;padding:15px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(255,92,0,.3)}
+.sbb:active{opacity:.9}
+.db{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 20px 100px}
+.sbr{padding:13px 15px;border-radius:13px;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.sbr.interested{background:var(--gl)}.sbr.not-interested{background:var(--br)}.sbr.followup{background:var(--yl)}.sbr.pending{background:var(--bl)}
+.dc{background:var(--w);border-radius:14px;padding:15px;margin-bottom:10px;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.dct{font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+.dr{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--br)}
+.dr:last-child{border-bottom:none;padding-bottom:0}
+.dk{font-size:13px;color:var(--mu)}.dv{font-size:13px;font-weight:600;text-align:right;max-width:60%;word-break:break-word}
+a.callbtn{background:var(--g);color:#fff;border:none;width:100%;padding:13px;border-radius:11px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:11px;text-decoration:none}
+a.wabtn{background:#25D366;color:#fff;border:none;width:100%;padding:13px;border-radius:11px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:7px;text-decoration:none}
+.delbtn{background:var(--rl);color:var(--r);border:none;width:100%;padding:13px;border-radius:11px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:7px}
+.delbtn:active{opacity:.8}
+.pg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.pg img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px}
+a.vlink{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bl);border-radius:10px;margin-bottom:6px;text-decoration:none}
+.vlink-tx{font-size:13px;font-weight:600;color:var(--b)}
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.mbg.on{display:flex}
+.mod{background:var(--w);border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:430px}
+.mod-ti{font-size:17px;font-weight:700;margin-bottom:16px;text-align:center}
+.mbtn{width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;border:none;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px}
+.mbtn:active{opacity:.8}
+.mb-g{background:var(--gl);color:var(--g)}.mb-b{background:var(--bl);color:var(--b)}.mb-wa{background:#E8FFF4;color:#25D366}.mb-c{background:var(--bg);color:var(--mu)}
+.inst-step{background:var(--bg);border-radius:10px;padding:12px;margin-bottom:10px}
+.inst-title{font-size:13px;font-weight:700;margin-bottom:6px}
+.inst-text{font-size:12px;color:var(--mu);line-height:1.8}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1A1A2E;color:#fff;padding:10px 20px;border-radius:100px;font-size:13px;font-weight:600;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center}
+.toast.on{opacity:1}
+</style>
 </head>
 <body>
 
-<div id="toast" class="toast"></div>
+<div class="toast" id="toast"></div>
 
-<!-- ════════════════════════════════════════════════
-     SCREEN 1 — Register
-     ════════════════════════════════════════════════ -->
-<div id="screen-register" class="screen">
-
-  <div class="logo-row">
-    <div class="logo-icon">T</div>
-    <div>
-      <div class="logo-name">TrikMed</div>
-      <div class="logo-sub">Voice Data Collection</div>
-    </div>
+<!-- HOME -->
+<div class="scr on" id="s-home">
+  <div class="hh">
+    <div class="hl">sambandh.ai</div>
+    <div class="ht">Salon Research 📋</div>
+    <div class="hs">Jaipur Field Survey</div>
   </div>
 
-  <h2>Enter Your Details</h2>
+  <div class="st">
+    <div class="si"><div class="sn" id="st-tot">0</div><div class="sl">Total</div></div>
+    <div class="si"><div class="sn" style="color:var(--g)" id="st-int">0</div><div class="sl">Interested</div></div>
+    <div class="si"><div class="sn" style="color:var(--y)" id="st-fu">0</div><div class="sl">Follow-up</div></div>
+    <div class="si"><div class="sn" style="color:var(--r)" id="st-not">0</div><div class="sl">Not Int.</div></div>
+  </div>
 
-  <!-- id="register-form" lets the new JS use a submit event listener -->
-  <form id="register-form">
+  <!-- SIMPLE INSTALL BANNER -->
+  <div class="ib" id="ios-banner" onclick="showInstallModal()" style="display:none">
+    <div class="ib-t">📱 Add to Home Screen</div>
+    <span style="color:#fff;font-size:18px">→</span>
+  </div>
 
-    <div class="field">
-      <div class="field-label">Full Name</div>
-      <input type="text" id="inp-name" placeholder="Dr. Rahul Kumar"
-             autocomplete="name" autocapitalize="words" autocorrect="off">
+  <button class="ab" onclick="go('s-add')">➕ Naya Salon Add Karo</button>
+
+  <div class="eb">
+    <button class="ebt eg" onclick="exportCSV()">📊 Google Sheets</button>
+    <button class="ebt em" onclick="showExportModal()">📤 Export / Share</button>
+  </div>
+
+  <div class="sw">
+    <span class="si2">🔍</span>
+    <input type="text" class="sinp" placeholder="Salon dhundo..." oninput="doSearch(this.value)">
+  </div>
+
+  <div class="fts">
+    <div class="ft on" onclick="doFilter('all',this)">Sab</div>
+    <div class="ft" onclick="doFilter('interested',this)">✅ Interested</div>
+    <div class="ft" onclick="doFilter('followup',this)">🔔 Follow-up</div>
+    <div class="ft" onclick="doFilter('not-interested',this)">❌ Not</div>
+    <div class="ft" onclick="doFilter('pending',this)">⏳ Pending</div>
+  </div>
+
+  <div class="ls" id="salon-list">
+    <div class="emp" id="empty-el">
+      <div class="ei">🏪</div>
+      <div class="et">Koi salon nahi abhi!</div>
+      <div class="es">Upar button dabao aur research shuru karo!</div>
     </div>
-
-    <div class="field">
-      <div class="field-label">Phone Number</div>
-      <input type="tel" id="inp-phone" placeholder="10-digit number"
-             maxlength="10" inputmode="numeric" pattern="[0-9]*">
-    </div>
-
-    <div class="field">
-      <div class="field-label">Specialization</div>
-      <select id="inp-spec">
-        <option value="">Select Specialization</option>
-        <option>General Medicine / MBBS</option>
-        <option>Pediatrics</option>
-        <option>Gynecology &amp; Obstetrics</option>
-        <option>Orthopedics</option>
-        <option>Cardiology</option>
-        <option>Dermatology</option>
-        <option>ENT</option>
-        <option>Ophthalmology</option>
-        <option>Dentistry</option>
-        <option>Neurology</option>
-        <option>Psychiatry</option>
-        <option>Urology</option>
-        <option>Nephrology</option>
-        <option>Gastroenterology</option>
-        <option>Pulmonology</option>
-        <option>Endocrinology</option>
-        <option>Oncology</option>
-        <option>Rheumatology</option>
-        <option>General Surgery</option>
-        <option>Other</option>
-      </select>
-    </div>
-
-    <div class="toggle-row">
-      <div>
-        <div class="t-title">Recording with patient present?</div>
-        <div class="t-sub">Captures real doctor-patient conversation — higher quality data</div>
-      </div>
-      <label class="sw">
-        <input type="checkbox" id="patient-toggle">
-        <span class="sw-track"></span>
-        <span class="sw-thumb"></span>
-      </label>
-    </div>
-
-    <button type="submit" class="btn-primary" id="btn-reg">
-      Start Recording Session →
-    </button>
-
-  </form>
-
+  </div>
 </div>
 
-<!-- ════════════════════════════════════════════════
-     SCREEN 2 — Record
-     ════════════════════════════════════════════════ -->
-<div id="screen-record" class="screen">
-
-  <!-- Top bar -->
-  <div class="top-bar">
-    <div>
-      <div class="top-name" id="d-name">—</div>
-      <div id="d-doctor-id" style="font-size:10px;color:#C0392B;margin-top:2px;font-weight:700;letter-spacing:0.04em;"></div>
+<!-- ADD -->
+<div class="scr" id="s-add">
+  <div class="tb">
+    <button class="tb-bk" onclick="go('s-home')">✕</button>
+    <div class="tb-ti">Naya Salon</div>
+    <button class="tb-ac" style="background:var(--o)" onclick="doSave()">Save</button>
+  </div>
+  <div class="fb">
+    <div class="fst">Salon Ki Jaankari</div>
+    <div class="ig"><label class="il">Salon Ka Naam *</label><input type="text" class="ifd" id="f-name" placeholder="Sharma Hair & Beauty"></div>
+    <div class="ig"><label class="il">Address / Area</label><input type="text" class="ifd" id="f-addr" placeholder="Vaishali Nagar, Jaipur"></div>
+    <div class="fst">Owner</div>
+    <div class="ig"><label class="il">Naam</label><input type="text" class="ifd" id="f-owner" placeholder="Rajesh Sharma"></div>
+    <div class="ig"><label class="il">Phone</label><input type="tel" class="ifd" id="f-phone" placeholder="98765 43210"></div>
+    <div class="fst">Daily Customers</div>
+    <div class="cs">
+      <button class="cbtn" onclick="chCnt(-10)">−−</button>
+      <button class="cbtn" onclick="chCnt(-1)">−</button>
+      <div><div class="cdisp" id="cnt-disp">20</div><div class="csub">per day</div></div>
+      <button class="cbtn" onclick="chCnt(1)">+</button>
+      <button class="cbtn" onclick="chCnt(10)">++</button>
     </div>
-    <div class="chip-wrap">
-      <div class="clip-badge" id="chip-clip">Clip <span id="session-count">0</span></div>
-      <div class="stat-panel right" id="panel-clip"></div>
+    <div class="fst" style="margin-top:18px">Current Problems</div>
+    <div class="ig"><textarea class="ifd" id="f-prob" placeholder="Customers wapas nahi aate, no follow-up..."></textarea></div>
+    <div class="fst">Marketing Kaise Karte Hain?</div>
+    <div class="ig"><textarea class="ifd" id="f-mkt" placeholder="WhatsApp, Instagram, word of mouth..."></textarea></div>
+    <div class="fst">Status</div>
+    <div class="ss">
+      <div class="so" id="so-int" onclick="chStatus('interested')"><div class="soic">✅</div><div class="solb">Interested</div></div>
+      <div class="so" id="so-fu" onclick="chStatus('followup')"><div class="soic">🔔</div><div class="solb">Follow-up</div></div>
+      <div class="so" id="so-not" onclick="chStatus('not-interested')"><div class="soic">❌</div><div class="solb">Not</div></div>
+    </div>
+    <div class="fst" style="margin-top:18px">Follow-up Date</div>
+    <div class="ig"><input type="date" class="ifd" id="f-date"></div>
+    <div class="fst">Notes</div>
+    <div class="ig"><textarea class="ifd" id="f-notes" placeholder="Koi bhi important baat..."></textarea></div>
+    <div class="fst">Photo Khicho</div>
+    <div class="pu" onclick="document.getElementById('f-photo').click()">
+      <div class="pui">📸</div>
+      <div class="put">Tap karke photo lo (max 3)</div>
+    </div>
+    <input type="file" id="f-photo" accept="image/*" multiple onchange="addPhotos(this)">
+    <div class="pp" id="photo-prev"></div>
+    <div class="fst" style="margin-top:18px">Video Links (Google Drive)</div>
+    <div class="vbox">
+      <div class="vbox-t">🎥 Google Drive Video Links</div>
+      <div class="vbox-s">Drive pe upload karo → Share link copy karo → Yahan paste karo</div>
+      <div class="vadd">
+        <input type="url" class="vinp" id="v-inp" placeholder="https://drive.google.com/...">
+        <button class="vbtn" onclick="addVideoLink()">Add</button>
+      </div>
+      <div class="vlist" id="v-list"></div>
     </div>
   </div>
+  <div class="sb"><button class="sbb" onclick="doSave()">✓ Salon Save Karo</button></div>
+</div>
 
-  <!-- Stats: saved, auto-save indicator, today -->
-  <div class="stats-row">
-    <div class="chip-wrap">
-      <div class="stat-chip" id="chip-saved">Saved: <span id="saved-count">0</span></div>
-      <div class="stat-panel" id="panel-saved"></div>
-    </div>
-    <div class="stat-chip green">Auto-save: ON ✓</div>
-    <div class="chip-wrap">
-      <div class="stat-chip" id="chip-today">Today: <span id="today-count">—</span></div>
-      <div class="stat-panel" id="panel-today"></div>
-    </div>
+<!-- DETAIL -->
+<div class="scr" id="s-detail">
+  <div class="tb">
+    <button class="tb-bk" onclick="go('s-home')">← Back</button>
+    <div class="tb-ti" id="det-title">Detail</div>
+    <button class="tb-ac" style="background:var(--r)" onclick="doDel()">Delete</button>
   </div>
+  <div class="db" id="det-body"></div>
+</div>
 
-  <!-- Template card -->
-  <div class="tmpl-card">
-    <div class="tmpl-header">
-      <span class="tmpl-label-text">
-        📋 Example Template #<span id="template-num">1</span>
-      </span>
-      <button class="btn-next" id="next-template-btn">Next →</button>
-    </div>
-    <div class="tmpl-text" id="template-text">Loading…</div>
-    <div class="tmpl-note">This is an example only. Speak naturally in your own words — do not read this verbatim.</div>
+<!-- EXPORT MODAL -->
+<div class="mbg" id="exp-modal">
+  <div class="mod">
+    <div class="mod-ti">📤 Export Karo</div>
+    <button class="mbtn mb-g" onclick="exportCSV();closeModal('exp-modal')">📊 CSV (Google Sheets)</button>
+    <button class="mbtn mb-b" onclick="emailExport();closeModal('exp-modal')">📧 Email Pe Bhejo</button>
+    <button class="mbtn mb-wa" onclick="waExport();closeModal('exp-modal')">💬 WhatsApp Summary</button>
+    <button class="mbtn mb-c" onclick="closeModal('exp-modal')">Cancel</button>
   </div>
+</div>
 
-  <!-- Waveform: 20 bars built by JS -->
-  <div class="waveform" id="waveform"></div>
-
-  <!-- Timer -->
-  <div class="timer" id="timer">00:00</div>
-
-  <!-- Record button (click handled by event listener in JS) -->
-  <div class="rec-zone">
-    <div class="rec-wrap">
-      <div class="pulse-ring" id="pulse-ring"></div>
-      <button class="rec-btn" id="rec-btn">
-        <span id="rec-icon"></span>
-      </button>
+<!-- INSTALL MODAL -->
+<div class="mbg" id="inst-modal">
+  <div class="mod">
+    <div class="mod-ti">📱 Add to Home Screen</div>
+    <div class="inst-step">
+      <div class="inst-title">🍎 iPhone:</div>
+      <div class="inst-text">Share ⬆️ → Add to Home Screen → Add</div>
     </div>
-    <div class="rec-btn-label" id="rec-label">Tap to Record</div>
+    <div class="inst-step">
+      <div class="inst-title">🤖 Android:</div>
+      <div class="inst-text">3 dots ⋮ → Add to Home Screen → Add</div>
+    </div>
+    <button class="mbtn mb-c" onclick="closeModal('inst-modal')">OK</button>
   </div>
-
-  <!-- Status + recording ID -->
-  <div class="status-line" id="status-text" style="color:#4a6080;">Ready</div>
-  <div class="rec-id" id="rec-id">—</div>
-
-  <!-- Change user (click handled by event listener in JS) -->
-  <button class="btn-change" id="change-user-btn">Change User</button>
-
 </div>
 
 <script>
-// ─────────────────────────────────────────────────────────────────
-// SVG constants (fixes the placeholder in the user-supplied code)
-// ─────────────────────────────────────────────────────────────────
-const MIC_SVG  = `<svg viewBox="0 0 24 24" fill="white" width="30" height="30"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>`;
-
-// ─────────────────────────────────────────────────────────────────
-// BUILD WAVEFORM — 20 bars, arch-shaped heights
-// ─────────────────────────────────────────────────────────────────
-(function buildWaveform() {
-  const wf = document.getElementById('waveform');
-  for (let i = 0; i < 20; i++) {
-    const angle = (i / 19) * Math.PI;
-    const bar = document.createElement('div');
-    bar.className = 'wave-bar';
-    // store max height for animation via JS
-    bar.dataset.maxH = Math.round(10 + Math.sin(angle) * 26);
-    wf.appendChild(bar);
-  }
-  // seed idle icon
-  document.getElementById('rec-icon').innerHTML = MIC_SVG;
-})();
-
-// ─────────────────────────────────────────────────────────────────
-// USER-SUPPLIED JAVASCRIPT (with SVG placeholder fixed)
-// ─────────────────────────────────────────────────────────────────
-
-const TEMPLATES = []; // will be filled from API
-let currentTemplateIndex = 0;
-let sessionCount = 0;
-let elapsedSeconds = 0;
-let timerInterval = null;
-let chunks = [];
-let mediaRecorder = null;
-let isRecording = false;
-const sessionRecordings = [];
-
-// Load templates on page load
-async function loadTemplates() {
-  try {
-    const res = await fetch('/api/templates');
-    const data = await res.json();
-    TEMPLATES.push(...data);
-    showRandomTemplate();
-  } catch(e) { /* use fallback template */ }
-}
-
-function showRandomTemplate() {
-  currentTemplateIndex = Math.floor(Math.random() * TEMPLATES.length);
-  const t = TEMPLATES[currentTemplateIndex];
-  document.getElementById('template-text').textContent = t.text;
-  document.getElementById('template-num').textContent = currentTemplateIndex + 1;
-}
-
-function generateRecordingId() {
-  const s = JSON.parse(localStorage.getItem('trikmed_student'));
-  const did = s.doctor_id || ('DR-' + s.phone.slice(-6));
-  return `${did}-${Date.now()}`;
-}
-
-let currentId = '';
-
-async function toggleRecording() {
-  if (!isRecording) {
-    // CHECK BROWSER SUPPORT
-    if (!navigator.mediaDevices || !window.MediaRecorder) {
-      alert('Please use Chrome browser'); return;
-    }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000 }
-      });
-      chunks = [];
-      currentId = generateRecordingId();
-      document.getElementById('rec-id').textContent = currentId;
-
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus' : 'audio/webm';
-      mediaRecorder = new MediaRecorder(stream, { mimeType });
-
-      mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
-
-      mediaRecorder.onstop = () => {
-        stream.getTracks().forEach(t => t.stop());
-        const blob = new Blob(chunks, { type: mimeType });
-        uploadRecording(blob); // fire and forget
-      };
-
-      mediaRecorder.onerror = () => { setUIState('idle'); };
-      mediaRecorder.start();
-      isRecording = true;
-      elapsedSeconds = 0;
-      timerInterval = setInterval(() => {
-        elapsedSeconds++;
-        const m = Math.floor(elapsedSeconds/60).toString().padStart(2,'0');
-        const s = (elapsedSeconds%60).toString().padStart(2,'0');
-        document.getElementById('timer').textContent = `${m}:${s}`;
-      }, 1000);
-      setUIState('recording');
-    } catch(err) {
-      if (err.name === 'NotAllowedError') alert('Please allow microphone access in Settings');
-      else alert('Microphone not found, please try again');
-      setUIState('idle');
-    }
-  } else {
-    // STOP — IMMEDIATE UI feedback
-    isRecording = false;
-    clearInterval(timerInterval);
-    setUIState('saving');
-    mediaRecorder.stop();
-  }
-}
-
-async function uploadRecording(blob) {
-  const s = JSON.parse(localStorage.getItem('trikmed_student'));
-  const form = new FormData();
-  form.append('audio', blob, currentId + '.webm');
-  form.append('student_id', s.student_id);
-  form.append('student_name', s.name);
-  form.append('student_initials', s.initials);
-  form.append('phone_last4', s.phone.slice(-4));
-  form.append('student_phone', s.phone || '');
-  form.append('doctor_id', s.doctor_id || ('DR-' + (s.phone || '').slice(-6)));
-  form.append('specialization', s.specialization || '');
-  form.append('template_id', currentTemplateIndex);
-  form.append('template_text', TEMPLATES[currentTemplateIndex]?.text || '');
-  form.append('duration_sec', elapsedSeconds);
-  form.append('patient_mode', s.patient_mode ? 1 : 0);
-
-  setTimeout(() => {
-    sessionCount++;
-    document.getElementById('session-count').textContent = sessionCount;
-    const savedEl = document.getElementById('saved-count');
-    if (savedEl) savedEl.textContent = sessionCount;
-    sessionRecordings.push({ id: currentId, duration: elapsedSeconds });
-
-    // Reset everything — order matters
-    chunks = [];
-    isRecording = false;
-    elapsedSeconds = 0;
-    document.getElementById('timer').textContent = '00:00';
-
-    // Re-enable button — force it
-    const btn = document.getElementById('rec-btn');
-    btn.disabled = false;
-    btn.style.opacity = '1';
-    btn.style.pointerEvents = 'auto';
-    btn.style.cursor = 'pointer';
-
-    // Load next template automatically
-    showRandomTemplate();
-    currentId = generateRecordingId();
-    document.getElementById('rec-id').textContent = currentId;
-
-    setUIState('idle');
-    updateStats();
-  }, 1500);
-
-  // Upload in background — silent retry on fail
-  try {
-    await fetch('/api/upload', {
-      method: 'POST',
-      body: form,
-      signal: AbortSignal.timeout ? AbortSignal.timeout(15000) : (() => { const c = new AbortController(); setTimeout(() => c.abort(), 15000); return c.signal; })()
-    });
-  } catch(e) {
-    // Silently save to retry queue
-    const queue = JSON.parse(localStorage.getItem('retry_queue') || '[]');
-    queue.push({ id: currentId, timestamp: Date.now() });
-    localStorage.setItem('retry_queue', JSON.stringify(queue));
-  }
-}
-
-function setUIState(state) {
-  const btn    = document.getElementById('rec-btn');
-  const status = document.getElementById('status-text');
-  const timer  = document.getElementById('timer');
-  const label  = document.getElementById('rec-label');
-  const pulse  = document.getElementById('pulse-ring');
-  const iconEl = document.getElementById('rec-icon');
-  const waves  = document.querySelectorAll('.wave-bar');
-
-  if (!btn || !status || !timer) return;
-
-  if (state === 'idle') {
-    if (iconEl) iconEl.innerHTML = MIC_SVG;
-    btn.disabled = false;
-    btn.style.opacity = '1';
-    btn.style.pointerEvents = 'auto';
-    btn.style.cursor = 'pointer';
-    btn.style.background = '#C0392B';
-    if (label) label.textContent = 'Tap to Record';
-    status.textContent = 'Ready';
-    status.style.color = '#7f8c8d';
-    timer.style.color = 'white';
-    if (pulse) pulse.classList.remove('on');
-    waves.forEach(w => {
-      w.style.animation = 'none';
-      w.style.height = '8px';
-      w.style.background = '#1e3a5f';
-    });
-
-  } else if (state === 'recording') {
-    if (iconEl) iconEl.innerHTML =
-      '<div style="width:26px;height:26px;' +
-      'background:white;border-radius:5px;"></div>';
-    btn.disabled = false;
-    btn.style.background = '#C0392B';
-    if (label) label.textContent = 'Tap to Stop';
-    status.textContent = '● Recording...';
-    status.style.color = '#C0392B';
-    timer.style.color = '#C0392B';
-    if (pulse) pulse.classList.add('on');
-    waves.forEach((w, i) => {
-      w.style.background = '#C0392B';
-      w.style.animation =
-        'wave'+(i%5)+' 0.'+(5+i%4)+
-        's ease-in-out infinite alternate';
-    });
-
-  } else if (state === 'saving') {
-    btn.disabled = true;
-    btn.style.opacity = '0.6';
-    btn.style.pointerEvents = 'none';
-    btn.style.background = '#7f8c8d';
-    if (label) label.textContent = '';
-    status.textContent = '↑ Saving...';
-    status.style.color = '#f39c12';
-    if (pulse) pulse.classList.remove('on');
-    waves.forEach(w => {
-      w.style.animation = 'none';
-      w.style.height = '8px';
-      w.style.background = '#1e3a5f';
-    });
-
-  } else if (state === 'saved') {
-    status.textContent = '✓ Saved! — ' + currentId;
-    status.style.color = '#27ae60';
-  }
-}
-
-async function updateStats() {
-  try {
-    const res = await fetch('/api/stats');
-    const d = await res.json();
-    const el = document.getElementById('today-count');
-    if (el) el.textContent = d.today_recordings || 0;
-  } catch(e) {}
-}
-
-// Register form submit
-document.getElementById('register-form')?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const name    = document.getElementById('inp-name').value.trim();
-  const phone   = document.getElementById('inp-phone').value.trim();
-  const spec    = document.getElementById('inp-spec').value;
-  const patient = document.getElementById('patient-toggle')?.checked || false;
-
-  const btn = document.getElementById('btn-reg');
-  btn.disabled = true; btn.textContent = 'Loading…';
-
-  try {
-    const res = await fetch('/api/register', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ name, phone, specialization: spec, patient_mode: patient })
-    });
-    const data = await res.json();
-    data.patient_mode = patient ? 1 : 0;
-    data.doctor_id = 'DR-' + phone.slice(-6);
-    localStorage.setItem('trikmed_student', JSON.stringify(data));
-    document.getElementById('d-name').textContent = data.name;
-    document.getElementById('d-doctor-id').textContent = data.doctor_id;
-    document.getElementById('saved-count').textContent = data.total_recordings || 0;
-    showScreen('screen-record');
-    loadTemplates();
-    updateStats();
-  } catch(e) {
-    alert('Could not connect to server. Is the backend running?');
-    btn.disabled = false; btn.textContent = 'Start Recording Session →';
-  }
-});
-
-// Main button
-document.getElementById('rec-btn')?.addEventListener('click', toggleRecording);
-
-// Space bar shortcut
-document.addEventListener('keydown', (e) => {
-  if (e.code === 'Space' && document.getElementById('screen-record').classList.contains('active')) {
-    e.preventDefault();
-    toggleRecording();
-  }
-});
-
-// Next template button
-document.getElementById('next-template-btn')?.addEventListener('click', () => {
-  if (!isRecording) showRandomTemplate();
-});
-
-// Change user
-document.getElementById('change-user-btn')?.addEventListener('click', () => {
-  if (isRecording) { isRecording = false; clearInterval(timerInterval); if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop(); }
-  localStorage.removeItem('trikmed_student');
-  sessionCount = 0;
-  TEMPLATES.length = 0;
-  sessionRecordings.length = 0;
-  setUIState('idle');
-  document.getElementById('timer').textContent = '00:00';
-  document.getElementById('rec-id').textContent = '—';
-  document.getElementById('session-count').textContent = '0';
-  document.getElementById('btn-reg').disabled = false;
-  document.getElementById('btn-reg').textContent = 'Start Recording Session →';
-  showScreen('screen-register');
-});
-
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-
-// ── Chip panel logic ──────────────────────────────────────────────
-function playAudio(recordingId) {
-  const audio = new Audio('/api/audio/' + recordingId);
-  audio.play().catch(err => alert('Could not play: ' + err.message));
-}
-
-function showPanel(anchorEl, html) {
-  document.querySelectorAll('.stat-panel-fixed').forEach(p => p.remove());
-  const rect = anchorEl.getBoundingClientRect();
-  const panel = document.createElement('div');
-  panel.className = 'stat-panel-fixed';
-  panel.style.cssText = `
-    position:fixed;
-    top:${rect.bottom + 8}px;
-    left:${Math.min(rect.left, window.innerWidth - 276)}px;
-    background:#0F1F3D; border:1px solid #C0392B;
-    border-radius:12px; padding:12px; min-width:260px;
-    max-height:220px; overflow-y:auto; z-index:999;
-    font-size:13px; color:white;
-  `;
-  panel.innerHTML = html;
-  document.body.appendChild(panel);
-  setTimeout(() => {
-    document.addEventListener('click', () =>
-      document.querySelectorAll('.stat-panel-fixed').forEach(p => p.remove()),
-    { once: true });
-  }, 100);
-}
-
-function sessionPanelHtml() {
-  if (sessionRecordings.length === 0)
-    return '<p style="color:#888;margin:0;text-align:center">No recordings this session yet</p>';
-  return [...sessionRecordings].reverse().map(r => `
-    <div style="display:flex;justify-content:space-between;align-items:center;
-                padding:8px 0;border-bottom:1px solid #1e3a5f;">
-      <span style="color:#aaa;font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:8px">${r.id}</span>
-      <span style="color:#888;flex-shrink:0;margin-right:8px">${r.duration}s</span>
-      <button onclick="playAudio('${r.id}')"
-        style="background:#C0392B;border:none;color:white;
-               padding:4px 10px;border-radius:8px;cursor:pointer;font-size:11px;flex-shrink:0;">
-        ▶ Play
-      </button>
-    </div>`).join('');
-}
-
-// SAVED chip
-document.getElementById('chip-saved')?.addEventListener('click', (e) => {
-  e.stopPropagation();
-  showPanel(e.currentTarget, sessionPanelHtml());
-});
-
-// CLIP badge — same as saved
-document.getElementById('chip-clip')?.addEventListener('click', (e) => {
-  e.stopPropagation();
-  showPanel(e.currentTarget, sessionPanelHtml());
-});
-
-// TODAY chip
-document.getElementById('chip-today')?.addEventListener('click', async (e) => {
-  e.stopPropagation();
-  showPanel(e.currentTarget, '<p style="color:#888;margin:0;text-align:center">Loading…</p>');
-  try {
-    const res = await fetch('/api/stats');
-    const d = await res.json();
-    const docs = d.today_doctors || [];
-    const panel = document.querySelector('.stat-panel-fixed');
-    if (!panel) return;
-    if (docs.length === 0) {
-      panel.innerHTML = '<p style="color:#888;margin:0;text-align:center">No recordings today yet</p>';
-      return;
-    }
-    panel.innerHTML = docs.map(doc => `
-      <div style="padding:8px 0;border-bottom:1px solid #1e3a5f;">
-        <div style="color:white;font-weight:600">${doc.doctor_name}</div>
-        <div style="color:#C0392B;font-size:11px;margin-top:2px">${doc.doctor_id} · ${doc.clips_today} clips</div>
-      </div>`).join('');
-  } catch(err) {
-    const panel = document.querySelector('.stat-panel-fixed');
-    if (panel) panel.innerHTML = '<p style="color:#888;margin:0;text-align:center">Could not load data</p>';
-  }
-});
-
-// Add CSS wave animations
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes wave0{0%{height:8px}100%{height:40px}}
-  @keyframes wave1{0%{height:12px}100%{height:52px}}
-  @keyframes wave2{0%{height:6px}100%{height:44px}}
-  @keyframes wave3{0%{height:10px}100%{height:36px}}
-  @keyframes wave4{0%{height:8px}100%{height:48px}}
-  #rec-btn { transition: transform 0.1s; }
-  #rec-btn:active { transform: scale(0.95); }
-`;
-document.head.appendChild(style);
-
-// ── Service Worker registration ───────────────────────────────────
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(e => console.warn('SW registration failed:', e));
-  });
-}
-
-// Init on page load
-const _savedStudent = localStorage.getItem('trikmed_student');
-if (_savedStudent) {
-  try {
-    const s = JSON.parse(_savedStudent);
-    if (!s.doctor_id && s.phone) { s.doctor_id = 'DR-' + s.phone.slice(-6); localStorage.setItem('trikmed_student', JSON.stringify(s)); }
-    document.getElementById('d-name').textContent = s.name;
-    document.getElementById('d-doctor-id').textContent = s.doctor_id || '';
-    document.getElementById('saved-count').textContent = s.total_recordings || 0;
-    showScreen('screen-record');
-    loadTemplates();
-    updateStats();
-  } catch(e) {
-    localStorage.removeItem('trikmed_student');
-    showScreen('screen-register');
-  }
-} else {
-  showScreen('screen-register');
-}
+var D=[];var cnt=20;var cSt='pending';var cFil='all';var cSrch='';var cId=null;var photos=[];var videos=[];
+var EMAIL='your@gmail.com';
+try{var sv=localStorage.getItem('sr_v3');if(sv)D=JSON.parse(sv)}catch(e){D=[]}
+function saveD(){try{localStorage.setItem('sr_v3',JSON.stringify(D))}catch(e){showToast('Storage full!')}}
+var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
+if(isIOS&&!window.navigator.standalone){document.getElementById('ios-banner').style.display='flex'}
+function go(id){document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on')});document.getElementById(id).classList.add('on');window.scrollTo(0,0);if(id==='s-home')render();if(id==='s-add')resetForm()}
+function chCnt(v){cnt=Math.max(0,cnt+v);document.getElementById('cnt-disp').textContent=cnt}
+function chStatus(s){cSt=s;['so-int','so-fu','so-not'].forEach(function(id){document.getElementById(id).className='so'});if(s==='interested')document.getElementById('so-int').className='so s-i';if(s==='followup')document.getElementById('so-fu').className='so s-f';if(s==='not-interested')document.getElementById('so-not').className='so s-n'}
+function addPhotos(input){var files=Array.from(input.files).slice(0,3-photos.length);files.forEach(function(f){if(f.size>3*1024*1024){showToast('Photo 3MB se kam honi chahiye!');return}var r=new FileReader();r.onload=function(e){photos.push(e.target.result);showPhotos()};r.onerror=function(){showToast('Photo load nahi hua')};r.readAsDataURL(f)});input.value=''}
+function showPhotos(){document.getElementById('photo-prev').innerHTML=photos.map(function(p,i){return'<img src="'+p+'" class="pt" onclick="removePhoto('+i+')">'}).join('')}
+function removePhoto(i){photos.splice(i,1);showPhotos()}
+function addVideoLink(){var inp=document.getElementById('v-inp');var url=inp.value.trim();if(!url){showToast('Link daalo!');return}if(!url.startsWith('http')){showToast('Valid link daalo');return}videos.push(url);inp.value='';showVideos();showToast('✅ Video add ho gaya!')}
+function showVideos(){var list=document.getElementById('v-list');if(!videos.length){list.innerHTML='';return}list.innerHTML=videos.map(function(v,i){var s=v.length>40?v.substring(0,40)+'...':v;return'<div class="vitem"><span class="vitem-ic">🎥</span><span class="vitem-tx">'+s+'</span><button class="vitem-del" onclick="removeVideo('+i+')">✕</button></div>'}).join('')}
+function removeVideo(i){videos.splice(i,1);showVideos()}
+function doSave(){var name=document.getElementById('f-name').value.trim();if(!name){showToast('Salon ka naam daalo!');return}var salon={id:Date.now(),name:name,addr:document.getElementById('f-addr').value,owner:document.getElementById('f-owner').value,phone:document.getElementById('f-phone').value,customers:cnt,problems:document.getElementById('f-prob').value,marketing:document.getElementById('f-mkt').value,status:cSt,followup:document.getElementById('f-date').value,notes:document.getElementById('f-notes').value,photos:photos.slice(),videos:videos.slice(),date:new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})};D.unshift(salon);saveD();showToast('✅ '+name+' save ho gaya!');go('s-home')}
+function resetForm(){['f-name','f-addr','f-owner','f-phone','f-prob','f-mkt','f-notes','f-date'].forEach(function(id){document.getElementById(id).value=''});cnt=20;document.getElementById('cnt-disp').textContent='20';cSt='pending';['so-int','so-fu','so-not'].forEach(function(id){document.getElementById(id).className='so'});photos=[];videos=[];document.getElementById('photo-prev').innerHTML='';document.getElementById('v-list').innerHTML='';document.getElementById('v-inp').value=''}
+function render(){updateStats();var list=document.getElementById('salon-list');list.querySelectorAll('.cd').forEach(function(c){c.remove()});var fil=D.filter(function(s){var mf=cFil==='all'||s.status===cFil;var q=cSrch.toLowerCase();var ms=!q||s.name.toLowerCase().indexOf(q)>-1||(s.owner&&s.owner.toLowerCase().indexOf(q)>-1)||(s.addr&&s.addr.toLowerCase().indexOf(q)>-1);return mf&&ms});var empty=document.getElementById('empty-el');empty.style.display=fil.length?'none':'flex';fil.forEach(function(s){var bc=s.status==='interested'?'bi':s.status==='not-interested'?'bnot':s.status==='followup'?'bfu':'bpd';var bt=s.status==='interested'?'✅ Interested':s.status==='not-interested'?'❌ Not':s.status==='followup'?'🔔 Follow-up':'⏳ Pending';var el=document.createElement('div');el.className='cd '+s.status;el.innerHTML='<div class="ct"><div><div class="cn">'+esc(s.name)+'</div><div class="co">'+esc(s.owner||'Owner naam nahi')+(s.addr?' · '+esc(s.addr):'')+'</div></div><span class="bg '+bc+'">'+bt+'</span></div><div class="ci"><div class="cii">👥 '+s.customers+'/day</div>'+(s.phone?'<div class="cii">📞 '+esc(s.phone)+'</div>':'')+'<div class="cii">📅 '+s.date+'</div>'+(s.videos&&s.videos.length?'<div class="cii">🎥 '+s.videos.length+'</div>':'')+'</div>'+(s.problems?'<div class="cp">💬 '+esc(s.problems)+'</div>':'')+'<div class="cf"><span class="cdt">'+(s.photos&&s.photos.length?'📸 '+s.photos.length:'')+'</span>'+(s.followup?'<span class="cfd">🔔 '+s.followup+'</span>':'')+'</div>';el.onclick=(function(id){return function(){showDet(id)}})(s.id);list.appendChild(el)})}
+function showDet(id){cId=id;var s=D.find(function(x){return x.id===id});if(!s)return;document.getElementById('det-title').textContent=s.name;var si=s.status==='interested'?'✅':s.status==='not-interested'?'❌':s.status==='followup'?'🔔':'⏳';var st=s.status==='interested'?'Interested':s.status==='not-interested'?'Not Interested':s.status==='followup'?'Follow-up':'Pending';var sc=s.status==='interested'?'color:var(--g)':s.status==='not-interested'?'color:var(--mu)':s.status==='followup'?'color:var(--y)':'color:var(--b)';var h='<div class="sbr '+s.status+'"><span style="font-size:22px">'+si+'</span><span style="font-size:15px;font-weight:700;'+sc+'">'+st+'</span>'+(s.followup?'<span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--y)">📅 '+s.followup+'</span>':'')+'</div>';h+='<div class="dc"><div class="dct">Salon Info</div><div class="dr"><span class="dk">Naam</span><span class="dv">'+esc(s.name)+'</span></div><div class="dr"><span class="dk">Address</span><span class="dv">'+esc(s.addr||'—')+'</span></div><div class="dr"><span class="dk">Daily Customers</span><span class="dv" style="color:var(--o)">'+s.customers+'/day</span></div><div class="dr"><span class="dk">Visit Date</span><span class="dv">'+s.date+'</span></div></div>';h+='<div class="dc"><div class="dct">Owner</div><div class="dr"><span class="dk">Naam</span><span class="dv">'+esc(s.owner||'—')+'</span></div><div class="dr"><span class="dk">Phone</span><span class="dv">'+esc(s.phone||'—')+'</span></div>';if(s.phone){h+='<a href="tel:'+s.phone.replace(/\D/g,'')+'" class="callbtn">📞 Call Karo</a><a href="https://wa.me/91'+s.phone.replace(/\D/g,'')+'" target="_blank" class="wabtn">💬 WhatsApp</a>'}h+='</div>';if(s.problems)h+='<div class="dc"><div class="dct">Problems</div><div style="font-size:14px;line-height:1.6">'+esc(s.problems)+'</div></div>';if(s.marketing)h+='<div class="dc"><div class="dct">Marketing</div><div style="font-size:14px;line-height:1.6">'+esc(s.marketing)+'</div></div>';if(s.notes)h+='<div class="dc"><div class="dct">Notes</div><div style="font-size:14px;line-height:1.6">'+esc(s.notes)+'</div></div>';if(s.videos&&s.videos.length){h+='<div class="dc"><div class="dct">Videos ('+s.videos.length+')</div>';s.videos.forEach(function(v,i){h+='<a href="'+v+'" target="_blank" class="vlink"><span style="font-size:18px">🎥</span><span class="vlink-tx">Video '+(i+1)+'</span><span style="font-size:13px;color:var(--b);margin-left:auto">Open →</span></a>'});h+='</div>'}if(s.photos&&s.photos.length){h+='<div class="dc"><div class="dct">Photos ('+s.photos.length+')</div><div class="pg">';s.photos.forEach(function(p){h+='<img src="'+p+'" onclick="window.open(this.src)">'});h+='</div></div>'}h+='<button class="delbtn" onclick="doDel()">🗑️ Delete Karo</button>';document.getElementById('det-body').innerHTML=h;go('s-detail')}
+function doDel(){if(confirm('Delete karna chahte ho?')){D=D.filter(function(s){return s.id!==cId});saveD();go('s-home')}}
+function doFilter(f,el){cFil=f;document.querySelectorAll('.ft').forEach(function(t){t.classList.remove('on')});el.classList.add('on');render()}
+function doSearch(v){cSrch=v;render()}
+function updateStats(){document.getElementById('st-tot').textContent=D.length;document.getElementById('st-int').textContent=D.filter(function(s){return s.status==='interested'}).length;document.getElementById('st-fu').textContent=D.filter(function(s){return s.status==='followup'}).length;document.getElementById('st-not').textContent=D.filter(function(s){return s.status==='not-interested'}).length}
+function exportCSV(){if(!D.length){showToast('Koi data nahi!');return}var h=['Salon Naam','Address','Owner','Phone','Daily Customers','Status','Problems','Marketing','Follow-up Date','Notes','Videos','Visit Date'];var rows=D.map(function(s){return['"'+(s.name||'').replace(/"/g,'""')+'"','"'+(s.addr||'').replace(/"/g,'""')+'"','"'+(s.owner||'').replace(/"/g,'""')+'"','"'+(s.phone||'').replace(/"/g,'""')+'"',s.customers,'"'+(s.status||'')+'"','"'+(s.problems||'').replace(/"/g,'""').replace(/\n/g,' ')+'"','"'+(s.marketing||'').replace(/"/g,'""').replace(/\n/g,' ')+'"','"'+(s.followup||'')+'"','"'+(s.notes||'').replace(/"/g,'""').replace(/\n/g,' ')+'"','"'+((s.videos||[]).join(' | '))+'"','"'+(s.date||'')+'"'].join(',')});var csv='\uFEFF'+h.join(',')+'\n'+rows.join('\n');var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='salon_research_'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url)},1000);showToast('✅ CSV download ho gayi!')}
+function emailExport(){if(!D.length){showToast('Koi data nahi!');return}var body='Salon Research — Jaipur\nDate: '+new Date().toLocaleDateString('en-IN')+'\n\nTotal: '+D.length+' | Interested: '+D.filter(function(s){return s.status==='interested'}).length+' | Follow-up: '+D.filter(function(s){return s.status==='followup'}).length+'\n\n---\n\n';D.forEach(function(s,i){body+=(i+1)+'. '+s.name+'\n';if(s.addr)body+='   📍 '+s.addr+'\n';body+='   👤 '+(s.owner||'—')+' | 📞 '+(s.phone||'—')+'\n';body+='   👥 '+s.customers+'/day | '+s.status+'\n';if(s.problems)body+='   ⚠️ '+s.problems+'\n';if(s.followup)body+='   🔔 '+s.followup+'\n';if(s.videos&&s.videos.length)body+='   🎥 '+s.videos.join(', ')+'\n';body+='\n'});window.location.href='mailto:'+EMAIL+'?subject='+encodeURIComponent('Salon Research '+new Date().toLocaleDateString('en-IN'))+'&body='+encodeURIComponent(body)}
+function waExport(){if(!D.length){showToast('Koi data nahi!');return}var msg='*Salon Research — Jaipur* 📋\n'+new Date().toLocaleDateString('en-IN')+'\n\nTotal: '+D.length+' | ✅ '+D.filter(function(s){return s.status==='interested'}).length+' | 🔔 '+D.filter(function(s){return s.status==='followup'}).length+' | ❌ '+D.filter(function(s){return s.status==='not-interested'}).length+'\n\n';var intD=D.filter(function(s){return s.status==='interested'});if(intD.length){msg+='*✅ Interested:*\n';intD.forEach(function(s){msg+='• '+s.name+(s.addr?' ('+s.addr+')':'')+(s.phone?' — '+s.phone:'')+'\n'})}window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank')}
+function showExportModal(){document.getElementById('exp-modal').classList.add('on')}
+function showInstallModal(){document.getElementById('inst-modal').classList.add('on')}
+function closeModal(id){document.getElementById(id).classList.remove('on')}
+document.getElementById('exp-modal').addEventListener('click',function(e){if(e.target===this)closeModal('exp-modal')});
+document.getElementById('inst-modal').addEventListener('click',function(e){if(e.target===this)closeModal('inst-modal')});
+function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');setTimeout(function(){t.classList.remove('on')},2500)}
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+render();
 </script>
 </body>
 </html>
