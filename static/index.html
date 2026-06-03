@@ -194,6 +194,9 @@ select option{background:#152843}
       Start Recording Session →
     </button>
   </form>
+  <div style="text-align:center;margin-top:20px">
+    <button class="btn-ch" id="btn-go-admin">Admin Panel</button>
+  </div>
 </div>
 
 <!-- SCREEN 2 -->
@@ -230,6 +233,39 @@ select option{background:#152843}
   <div class="sline" id="stat" style="color:#4a6080">Ready</div>
   <div class="rid" id="rid">—</div>
   <button class="btn-ch" id="btn-ch">Change User</button>
+</div>
+
+<!-- SCREEN 3 — Admin -->
+<div id="s3" class="screen">
+  <div class="logo" style="margin-bottom:16px">
+    <div class="logo-box">T</div>
+    <div>
+      <div class="logo-t">TrikMed Admin</div>
+      <div class="logo-s">All recordings data</div>
+    </div>
+  </div>
+
+  <div id="admin-login">
+    <h2 style="margin-bottom:16px">Admin Login</h2>
+    <div class="field">
+      <div class="lbl">Password</div>
+      <input id="a-pass" type="password" placeholder="Enter admin password">
+    </div>
+    <button class="btn-p" id="btn-admin-login">Login →</button>
+    <button class="btn-ch" id="btn-back-admin" style="margin-top:12px">← Back</button>
+  </div>
+
+  <div id="admin-dash" style="display:none">
+    <div id="a-stats" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap"></div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button class="btn-p" id="tab-docs" style="flex:1;padding:10px;font-size:13px">Doctors</button>
+      <button class="btn-p" id="tab-recs" style="flex:1;padding:10px;font-size:13px;background:#152843;border:1px solid #1e3a5f">Recordings</button>
+      <button class="btn-p" id="tab-export" style="flex:1;padding:10px;font-size:13px;background:#152843;border:1px solid #1e3a5f">Export CSV</button>
+    </div>
+    <div id="a-docs-list"></div>
+    <div id="a-recs-list" style="display:none"></div>
+    <button class="btn-ch" id="btn-admin-logout" style="margin-top:16px">Logout</button>
+  </div>
 </div>
 
 <script>
@@ -550,6 +586,110 @@ if(_u){
     go2(u);
   }catch(e){localStorage.removeItem('tmu');show('s1');}
 }else{show('s1');}
+
+// ── Admin panel ───────────────────────────────────────────────────
+let adminToken=localStorage.getItem('admin_token')||'';
+
+document.getElementById('btn-go-admin').addEventListener('click',()=>{
+  if(adminToken){loadAdminDash();}
+  show('s3');
+});
+document.getElementById('btn-back-admin').addEventListener('click',()=>show('s1'));
+
+document.getElementById('btn-admin-login').addEventListener('click',async()=>{
+  const pass=document.getElementById('a-pass').value;
+  try{
+    const d=await fetch('/api/admin/login',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({password:pass})
+    }).then(r=>{if(!r.ok)throw new Error();return r.json();});
+    if(d.success){
+      adminToken=d.token;
+      localStorage.setItem('admin_token',adminToken);
+      loadAdminDash();
+    }
+  }catch(e){alert('Wrong password');}
+});
+
+async function loadAdminDash(){
+  document.getElementById('admin-login').style.display='none';
+  document.getElementById('admin-dash').style.display='block';
+  const s=await fetch('/api/stats').then(r=>r.json());
+  document.getElementById('a-stats').innerHTML=
+    '<div class="chip">'+s.total_recordings+' Total Clips</div>'+
+    '<div class="chip">'+s.today_recordings+' Today</div>';
+  loadDoctors();
+}
+
+async function loadDoctors(){
+  document.getElementById('a-docs-list').style.display='block';
+  document.getElementById('a-recs-list').style.display='none';
+  const docs=await fetch('/api/admin/doctors?token='+adminToken).then(r=>r.json());
+  document.getElementById('a-docs-list').innerHTML=docs.length
+    ?docs.map(d=>
+      '<div style="background:#152843;border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer" onclick="loadDrRecordings(\''+d.phone+'\',\''+d.name.replace(/'/g,"\\'")+'\')">'+
+      '<div style="font-weight:700">'+d.name+'</div>'+
+      '<div style="color:#C0392B;font-size:11px;margin-top:3px">'+d.spec+' \xb7 '+d.total+' clips \xb7 '+d.phone+'</div>'+
+      '<div style="color:#4a6080;font-size:10px;margin-top:2px">Tap to see recordings ▶</div>'+
+      '</div>').join('')
+    :'<div class="pr-empty">No doctors yet</div>';
+}
+
+async function loadDrRecordings(phone,name){
+  const did='DR-'+phone.slice(-6);
+  const recs=await fetch('/api/doctor/'+did+'/recordings').then(r=>r.json());
+  document.getElementById('a-docs-list').innerHTML=
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">'+
+    '<button class="btn-ch" onclick="loadDoctors()" style="padding:0;margin:0">← Back</button>'+
+    '<div style="font-weight:700">'+name+' — '+recs.length+' clips</div>'+
+    '</div>'+
+    (recs.length
+      ?recs.map(r=>
+        '<div style="background:#152843;border-radius:10px;padding:10px;margin-bottom:6px;display:flex;align-items:center;gap:8px">'+
+        '<div style="flex:1;min-width:0">'+
+        '<div style="color:#aaa;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+r.id+'</div>'+
+        '<div style="color:#4a6080;font-size:10px;margin-top:2px">'+(r.date||'')+' '+(r.time||'')+' \xb7 '+(r.duration||0)+'s</div>'+
+        '</div>'+
+        '<button class="pr-play" onclick="play(\''+r.id+'\')">&#9654; Play</button>'+
+        '</div>').join('')
+      :'<div class="pr-empty">No recordings</div>');
+}
+
+document.getElementById('tab-docs').addEventListener('click',()=>{
+  document.getElementById('a-docs-list').style.display='block';
+  document.getElementById('a-recs-list').style.display='none';
+  loadDoctors();
+});
+
+document.getElementById('tab-recs').addEventListener('click',async()=>{
+  document.getElementById('a-docs-list').style.display='none';
+  document.getElementById('a-recs-list').style.display='block';
+  const recs=await fetch('/api/admin/all-recordings?token='+adminToken).then(r=>r.json());
+  document.getElementById('a-recs-list').innerHTML=recs.length
+    ?recs.map(r=>
+      '<div style="background:#152843;border-radius:10px;padding:10px;margin-bottom:6px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center">'+
+      '<div>'+
+      '<div style="font-weight:600;font-size:13px">'+r.doctor_name+'</div>'+
+      '<div style="color:#C0392B;font-size:10px">'+r.doctor_id+' \xb7 '+(r.spec||'')+'</div>'+
+      '<div style="color:#4a6080;font-size:10px">'+(r.date||'')+' \xb7 '+(r.duration||0)+'s</div>'+
+      '</div>'+
+      '<button class="pr-play" onclick="play(\''+r.id+'\')">&#9654; Play</button>'+
+      '</div></div>').join('')
+    :'<div class="pr-empty">No recordings yet</div>';
+});
+
+document.getElementById('tab-export').addEventListener('click',()=>{
+  window.open('/api/admin/export-csv?token='+adminToken,'_blank');
+});
+
+document.getElementById('btn-admin-logout').addEventListener('click',()=>{
+  adminToken='';
+  localStorage.removeItem('admin_token');
+  document.getElementById('admin-login').style.display='block';
+  document.getElementById('admin-dash').style.display='none';
+  document.getElementById('a-pass').value='';
+});
 </script>
 </body>
 </html>

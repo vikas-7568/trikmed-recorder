@@ -16,6 +16,8 @@ app = FastAPI(lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"],
     allow_methods=["*"], allow_headers=["*"])
 
+ADMIN_PASSWORD = "trikmed@admin2026"
+
 TEMPLATES = [
     {"id":1,"text":"Dolo 650 do baar roz, khana ke baad, 5 din. Pantop 40 subah khali pet. ORS teen baar roz."},
     {"id":2,"text":"Metformin 500mg subah shaam khane ke saath. Glimepiride 1mg subah khali pet. Telma 40 raat ko."},
@@ -132,6 +134,68 @@ async def stats(doctor_id: str = ""):
                 for r in docs
             ]
         }
+
+@app.post("/api/admin/login")
+async def admin_login(data: dict):
+    if data.get("password") != ADMIN_PASSWORD:
+        raise HTTPException(403, "Wrong password")
+    return {"token": "admin-" + ADMIN_PASSWORD[:8], "success": True}
+
+@app.get("/api/admin/all-recordings")
+async def all_recordings(token: str = ""):
+    if not token.startswith("admin-"):
+        raise HTTPException(403, "Unauthorized")
+    async with aiosqlite.connect(DB) as db:
+        rows = await (await db.execute("""
+            SELECT recording_id, doctor_id, doctor_name,
+            doctor_phone, specialization, duration_sec,
+            record_date, record_time, patient_mode, template_text
+            FROM recordings ORDER BY created_at DESC
+        """)).fetchall()
+        return [{"id":r[0],"doctor_id":r[1],"doctor_name":r[2],
+                 "phone":r[3],"spec":r[4],"duration":r[5],
+                 "date":r[6],"time":r[7],"patient":r[8],
+                 "template":r[9]} for r in rows]
+
+@app.get("/api/admin/doctors")
+async def all_doctors(token: str = ""):
+    if not token.startswith("admin-"):
+        raise HTTPException(403, "Unauthorized")
+    async with aiosqlite.connect(DB) as db:
+        rows = await (await db.execute("""
+            SELECT s.name, s.phone, s.specialization,
+            s.total_recordings, s.created_at,
+            COUNT(r.id) as actual_count
+            FROM students s
+            LEFT JOIN recordings r ON s.phone = r.doctor_phone
+            GROUP BY s.id ORDER BY actual_count DESC
+        """)).fetchall()
+        return [{"name":r[0],"phone":r[1],"spec":r[2],
+                 "total":r[5],"joined":r[4]} for r in rows]
+
+@app.get("/api/admin/export-csv")
+async def export_csv(token: str = ""):
+    if not token.startswith("admin-"):
+        raise HTTPException(403, "Unauthorized")
+    import csv, io
+    async with aiosqlite.connect(DB) as db:
+        rows = await (await db.execute("""
+            SELECT recording_id, doctor_name, doctor_phone,
+            specialization, duration_sec, record_date,
+            record_time, patient_mode, template_text
+            FROM recordings ORDER BY record_date DESC
+        """)).fetchall()
+    output = io.StringIO()
+    w = csv.writer(output)
+    w.writerow(["Recording ID","Doctor Name","Phone",
+                "Specialization","Duration(sec)","Date",
+                "Time","Patient Present","Template"])
+    w.writerows(rows)
+    from fastapi.responses import Response
+    return Response(content=output.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition":
+            "attachment; filename=trikmed_recordings.csv"})
 
 @app.get("/api/doctor/{doctor_id}/recordings")
 async def doctor_recordings(doctor_id: str):
