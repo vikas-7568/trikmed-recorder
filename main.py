@@ -180,7 +180,7 @@ async def upload(
         subprocess.run([
             'ffmpeg', '-y', '-i', path,
             '-af',
-            'silenceremove=start_periods=1:start_duration=1:start_threshold=-50dB:stop_periods=-1:stop_duration=8:stop_threshold=-50dB,loudnorm',
+            'silenceremove=start_periods=1:start_duration=1:start_threshold=-50dB:start_silence=1:stop_periods=-1:stop_duration=8:stop_threshold=-50dB:stop_silence=1,loudnorm',
             '-ar', '16000',
             processed_path
         ], check=True, capture_output=True, timeout=30)
