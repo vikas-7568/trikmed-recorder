@@ -175,11 +175,12 @@ async def upload(
     path = f"{RECORDINGS_DIR}/{rid}.webm"
     with open(path, "wb") as f:
         f.write(await audio.read())
-    processed_path = path.replace('.webm', '_processed.webm')
     try:
+        processed_path = path.replace('.webm', '_processed.webm')
         subprocess.run([
             'ffmpeg', '-y', '-i', path,
-            '-af', 'silenceremove=start_periods=1:start_silence=0.5:start_threshold=-50dB:stop_periods=1:stop_silence=0.5:stop_threshold=-50dB,loudnorm',
+            '-af',
+            'silenceremove=start_periods=1:start_duration=1:start_threshold=-50dB:stop_periods=-1:stop_duration=8:stop_threshold=-50dB,loudnorm',
             '-ar', '16000',
             processed_path
         ], check=True, capture_output=True, timeout=30)
