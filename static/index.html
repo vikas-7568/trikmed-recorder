@@ -694,7 +694,7 @@ async function loadAdminDash(){
 async function loadDoctors(){
   document.getElementById('a-docs-list').style.display='block';
   document.getElementById('a-recs-list').style.display='none';
-  const docs=await fetch('/api/admin/doctors?token='+adminToken).then(r=>r.json());
+  const docs=await fetch('/api/admin/doctors?token='+encodeURIComponent(adminToken)).then(r=>r.json());
   document.getElementById('a-docs-list').innerHTML=docs.length
     ?docs.map(d=>
       '<div style="background:#152843;border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer" onclick="loadDrRecordings(\''+d.phone+'\',\''+d.name.replace(/'/g,"\\'")+'\')">'+
@@ -734,7 +734,7 @@ document.getElementById('tab-docs').addEventListener('click',()=>{
 document.getElementById('tab-recs').addEventListener('click',async()=>{
   document.getElementById('a-docs-list').style.display='none';
   document.getElementById('a-recs-list').style.display='block';
-  const recs=await fetch('/api/admin/all-recordings?token='+adminToken).then(r=>r.json());
+  const recs=await fetch('/api/admin/all-recordings?token='+encodeURIComponent(adminToken)).then(r=>r.json());
   document.getElementById('a-recs-list').innerHTML=recs.length
     ?recs.map(r=>
       '<div style="background:#152843;border-radius:10px;padding:10px;margin-bottom:6px">'+
@@ -750,7 +750,7 @@ document.getElementById('tab-recs').addEventListener('click',async()=>{
 });
 
 document.getElementById('tab-export').addEventListener('click',()=>{
-  window.open('/api/admin/export-csv?token='+adminToken,'_blank');
+  window.open('/api/admin/export-csv?token='+encodeURIComponent(adminToken),'_blank');
 });
 
 document.getElementById('btn-admin-logout').addEventListener('click',()=>{
