@@ -25,32 +25,96 @@ OTP_EXPIRE = int(os.getenv("OTP_EXPIRE_MINUTES", "10"))
 
 def send_otp_email(to_email: str, otp: str, doctor_name: str):
     resend.api_key = os.getenv("RESEND_API_KEY")
+    digit_cell = (
+        'width:54px;height:62px;text-align:center;vertical-align:middle;'
+        'background-color:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:12px;'
+        'font-size:34px;font-weight:800;color:#0F172A;'
+        'font-family:Courier New,Courier,monospace'
+    )
+    spacer = '<td style="width:9px"></td>'
+    digits_html = spacer.join(
+        f'<td style="{digit_cell}">{d}</td>' for d in otp
+    )
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body style="margin:0;padding:0;background-color:#F8FAFC;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#F8FAFC">
+  <tr>
+    <td align="center" style="padding:48px 20px">
+
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;width:100%">
+        <tr>
+          <td style="padding-bottom:28px">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td width="38" height="38" style="background-color:#2563EB;border-radius:9px;text-align:center;vertical-align:middle;font-size:20px;font-weight:900;color:#ffffff">T</td>
+                <td style="padding-left:12px;vertical-align:middle">
+                  <p style="margin:0;font-size:17px;font-weight:700;color:#0F172A;line-height:1.2">TrikMed</p>
+                  <p style="margin:3px 0 0;font-size:11px;color:#64748B;line-height:1.2">AI Medical Documentation Platform</p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;width:100%;background-color:#ffffff;border-radius:16px;box-shadow:0 4px 24px rgba(15,23,42,0.08),0 1px 4px rgba(15,23,42,0.04)">
+        <tr>
+          <td style="height:4px;background-color:#2563EB;border-radius:16px 16px 0 0;font-size:0;line-height:0;background-image:linear-gradient(90deg,#2563EB,#0EA5E9)">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style="padding:44px 48px 36px">
+
+            <p style="margin:0 0 10px;font-size:13px;font-weight:600;color:#64748B">Hi Dr. {doctor_name},</p>
+            <h1 style="margin:0 0 14px;font-size:28px;font-weight:700;color:#0F172A;letter-spacing:-0.5px;line-height:1.2">Verify your email</h1>
+            <p style="margin:0 0 40px;font-size:15px;color:#64748B;line-height:1.75">
+              Use the verification code below to securely access your TrikMed account.
+            </p>
+
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:18px">
+              <tr>{digits_html}</tr>
+            </table>
+
+            <p style="margin:0 0 40px;font-size:13px;color:#94A3B8">&#9201;&nbsp; Valid for {OTP_EXPIRE} minutes</p>
+
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr><td height="1" bgcolor="#F1F5F9" style="font-size:0;line-height:0">&nbsp;</td></tr>
+            </table>
+
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:28px">
+              <tr><td style="font-size:13px;color:#64748B;padding-bottom:12px">&#128274;&nbsp; One-time use code</td></tr>
+              <tr><td style="font-size:13px;color:#64748B;padding-bottom:12px">&#128737;&nbsp; Never share this code with anyone</td></tr>
+              <tr><td style="font-size:13px;color:#64748B">&#9201;&nbsp; Automatically expires after {OTP_EXPIRE} minutes</td></tr>
+            </table>
+
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:24px 48px 36px;border-top:1px solid #F1F5F9">
+            <p style="margin:0 0 6px;font-size:13px;color:#64748B">
+              Need help? <a href="mailto:support@trikmed.com" style="color:#2563EB;text-decoration:none;font-weight:500">support@trikmed.com</a>
+            </p>
+            <p style="margin:0;font-size:12px;color:#94A3B8">
+              TrikMed &copy; 2026 &nbsp;&middot;&nbsp; AI-Powered Medical Documentation Platform
+            </p>
+          </td>
+        </tr>
+      </table>
+
+    </td>
+  </tr>
+</table>
+</body>
+</html>"""
     resend.Emails.send({
         "from": "TrikMed <noreply@trikmed.com>",
         "to": to_email,
         "subject": f"Your TrikMed verification code: {otp}",
-        "html": f"""
-        <div style="font-family:sans-serif;max-width:400px;
-          margin:0 auto;padding:30px">
-          <div style="background:#0F1F3D;padding:20px;
-            border-radius:12px;text-align:center;margin-bottom:20px">
-            <span style="color:white;font-size:24px;font-weight:900">
-              TrikMed</span>
-          </div>
-          <p>Hi Dr. {doctor_name},</p>
-          <div style="background:#f8f8f8;border-radius:12px;
-            padding:24px;text-align:center;margin:20px 0">
-            <p style="color:#666;font-size:13px;margin:0 0 8px">
-              YOUR VERIFICATION CODE</p>
-            <p style="font-size:42px;font-weight:900;
-              color:#C0392B;letter-spacing:8px;margin:0">
-              {otp}</p>
-            <p style="color:#999;font-size:12px;margin:8px 0 0">
-              Valid for 10 minutes</p>
-          </div>
-          <p style="color:#999;font-size:12px">
-            If you did not request this, ignore this email.</p>
-        </div>"""
+        "html": html
     })
 
 TEMPLATES = [
