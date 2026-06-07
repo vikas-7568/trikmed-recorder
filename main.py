@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from database import init_db, DB, RECORDINGS_DIR
 from dotenv import load_dotenv
-import aiosqlite, os, time, random, string
+import aiosqlite, os, time, random, string, subprocess
 import resend
 
 load_dotenv()
@@ -175,6 +175,17 @@ async def upload(
     path = f"{RECORDINGS_DIR}/{rid}.webm"
     with open(path, "wb") as f:
         f.write(await audio.read())
+    processed_path = path.replace('.webm', '_processed.webm')
+    try:
+        subprocess.run([
+            'ffmpeg', '-y', '-i', path,
+            '-af', 'silenceremove=start_periods=1:start_silence=0.5:start_threshold=-50dB:stop_periods=1:stop_silence=0.5:stop_threshold=-50dB,loudnorm',
+            '-ar', '16000',
+            processed_path
+        ], check=True, capture_output=True, timeout=30)
+        os.replace(processed_path, path)
+    except Exception:
+        pass
     today = datetime.now().strftime("%Y-%m-%d")
     async with aiosqlite.connect(DB) as db:
         await db.execute("""INSERT INTO recordings
