@@ -26,7 +26,7 @@ OTP_EXPIRE = int(os.getenv("OTP_EXPIRE_MINUTES", "10"))
 def send_otp_email(to_email: str, otp: str, doctor_name: str):
     resend.api_key = os.getenv("RESEND_API_KEY")
     resend.Emails.send({
-        "from": "TrikMed <onboarding@resend.dev>",
+        "from": "TrikMed <noreply@trikmed.com>",
         "to": to_email,
         "subject": f"Your TrikMed verification code: {otp}",
         "html": f"""
