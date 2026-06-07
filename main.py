@@ -20,7 +20,7 @@ app = FastAPI(lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"],
     allow_methods=["*"], allow_headers=["*"])
 
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "trikmed@admin2026")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "TricMed@flupto#2026life")
 OTP_EXPIRE = int(os.getenv("OTP_EXPIRE_MINUTES", "10"))
 
 def send_otp_email(to_email: str, otp: str, doctor_name: str):
